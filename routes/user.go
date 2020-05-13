@@ -86,6 +86,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// TODO: Validate that the updated user exists
 	usr, err := app.store.UserProvider.UpdateUser(&updatedUser)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
