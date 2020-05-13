@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	"go-api/db"
 	"go-api/db/postgres"
-	"github.com/rs/cors"
 	"log"
 	"net/http"
 )
@@ -15,7 +15,7 @@ type App struct {
 }
 
 type AppConfig struct {
-	DbUrl          string
+	DbUrl string
 }
 
 func NewApp(config *AppConfig) *App {
@@ -40,7 +40,7 @@ func (app *App) Setup(port string) error {
 
 func (app *App) RegisterRoutes() {
 	// TODO: Will have i.e. below
-	// 	app.RegisterUserRoutes()
+	app.RegisterUserRoutes()
 	// app.RegisterUserProfileRoutes()
 	// app.RegisterProfileRoutes()
 	// app.RegisterProjectRoutes()

@@ -28,7 +28,7 @@ func NewPostgresDataStore(dbUrl string) (*db.DataStore, error) {
 	}
 	dbStore := &PostgresDBStore{database: database}
 	return &db.DataStore{
-		Closable:          dbStore,
-		// UserProvider:      dbStore,
+		Closable:     dbStore,
+		UserProvider: dbStore,
 	}, nil
 }
