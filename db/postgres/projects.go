@@ -7,21 +7,51 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 		`INSERT INTO projects(id, title, state, tags, user_id, created_date, end_date, oneliner, discussion_id, members, logo, cover_photo, media) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
-		projects.ID,
-		projects.FirstName,
-		projects.LastName,
-		projects.Email,
-		projects.Image,
-		projects.Password,
-		projects.ProfileID,
-		projects.Deactivated,
-		projects.Banned,
+		project.ID,
+		project.Title,
+		project.State,
+		project.Tags,
+		project.Creator,
+		project.CreatedDate,
+		project.EndDate,
+		project.OneLiner,
+		project.Discussion,
+		project.Members,
+		project.Logo,
+		project.CoverPhoto,
+		project.Media,
+
 	).Scan(&id)
 	if err != nil {
 		return "", err
 	}
-	if id != user.ID {
+	if id != project.ID {
 		return "", CreateError
 	}
 	return id, nil
+}
+
+func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
+	sqlStatement := `SELECT id, title, state, tags, user_id, created_date, end_date, oneliner, discussion_id, members, logo, cover_photo, media FROM projects WHERE id=$1;`
+	var project model.Project
+	row := p.database.QueryRow(sqlStatement, id)
+	err := row.Scan(
+		&project.ID,
+		&project.Title,
+		&project.State,
+		&project.Tags,
+		&project.Creator,
+		&project.CreatedDate,
+		&project.EndDate,
+		&project.OneLiner,
+		&project.Discussion,
+		&project.Members,
+		&project.Logo,
+		&project.CoverPhoto,
+		&project.Media,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &project, nil
 }

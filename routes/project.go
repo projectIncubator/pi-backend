@@ -30,8 +30,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// TODO: Create CreateProject() in postgre
-	id, err := app.store.ProjectProvider.CreateProject(&newProject)
+	id , err := app.store.ProjectProvider.CreateProject(&newProject)
 	if err != nil {
 		log.Printf("App.CreateProject - error creating project %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -85,7 +84,6 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: Validate that the updated project exists
-	// TODO: Create updateProject in postger
 	project, err := app.store.ProjectProvider.UpdateProject(&updatedProject)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
