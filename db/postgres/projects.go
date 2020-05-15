@@ -10,16 +10,16 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 		project.ID,
 		project.Title,
 		project.State,
-	//	project.Tags,
+		//	project.Tags,
 		project.Creator,
 		project.CreatedDate,
 		project.EndDate,
 		project.OneLiner,
 		project.Discussion,
-	//	project.Members,
+		//	project.Members,
 		project.Logo,
 		project.CoverPhoto,
-	//	project.Media,
+		//	project.Media,
 
 	).Scan(&id)
 	if err != nil {
@@ -30,25 +30,22 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	}
 	return id, nil
 }
-
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
-	sqlStatement := `SELECT id, title, state, /*tags,*/ user_id, created_date, end_date, oneliner, discussion_id, /*members,*/ logo, cover_photo /*media*/ FROM projects WHERE id=$1;`
+	sqlStatement := `SELECT id, title, state, user_id, created_date, end_date, oneliner, discussion_id, logo,
+cover_photo FROM projects WHERE id=$1;`
 	var project model.Project
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&project.ID,
 		&project.Title,
 		&project.State,
-	//	&project.Tags,
 		&project.Creator,
 		&project.CreatedDate,
 		&project.EndDate,
 		&project.OneLiner,
 		&project.Discussion,
-	//	&project.Members,
 		&project.Logo,
 		&project.CoverPhoto,
-	//	&project.Media,
 	)
 	if err != nil {
 		return nil, err

@@ -43,6 +43,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
+	log.Println("test")
 	// Input
 	projectID := mux.Vars(r)["id"]
 	// Validation
@@ -55,9 +56,10 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// TODO: Create CreateProject() in postgre
 	project, err := app.store.ProjectProvider.GetProject(projectID)
 	if err != nil {
+		log.Printf("hello")
+		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

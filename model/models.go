@@ -34,16 +34,16 @@ type Project struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	State       string    `json:"state"`
-	Tags        []string  `json:"tags"`
+	//Tags        []string  `json:"tags"`
 	Creator     string    `json:"user_id"`
 	CreatedDate time.Time `json:"created_date"`
 	EndDate     time.Time `json:"end_date"`
 	OneLiner    string    `json:"oneliner"`
 	Discussion  string    `json:"discussion_id"`
-	Members     []string  `json:"members"`
+//	Members     []string  `json:"members"`
 	Logo        string    `json:"logo"`
 	CoverPhoto  string    `json:"cover_photo"`
-	Media       []string  `json:"media"`
+//	Media       []string  `json:"media"`
 	// Modules []ProjectModule `json:"projectModules"`
 }
 
