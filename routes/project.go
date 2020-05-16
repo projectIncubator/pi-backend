@@ -56,14 +56,19 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	log.Println("test2222")
 	project, err := app.store.ProjectProvider.GetProject(projectID)
+	log.Println("test33333")
 	if err != nil {
 		log.Printf("hello")
 		log.Println(err)
+		log.Printf("Cool")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	log.Println("test4")
 	w.WriteHeader(http.StatusOK)
+	log.Println("test5")
 	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 

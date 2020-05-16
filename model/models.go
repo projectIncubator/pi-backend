@@ -42,7 +42,7 @@ type Project struct {
 	Discussion  string    `json:"discussion_id"`
 //	Members     []string  `json:"members"`
 	Logo        string    `json:"logo"`
-	CoverPhoto  string    `json:"cover_photo"`
+	CoverPhoto  string    `json:"coverphoto"`
 //	Media       []string  `json:"media"`
 	// Modules []ProjectModule `json:"projectModules"`
 }

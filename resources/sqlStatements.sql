@@ -1,4 +1,4 @@
-create extension "uuid-ossp" if not exists;
+create extension "uuid-ossp";
 -- 1. Add your table to drop if exists
 DROP TABLE IF EXISTS users;
 -- 2. Create your table
