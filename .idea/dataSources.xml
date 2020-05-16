@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="incubatorProject" uuid="ab5fa64b-6812-41d8-9078-46c1051b0f5d">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://ec2-52-44-166-58.compute-1.amazonaws.com:5432/d30iqgkj9aq2ji</jdbc-url>
+    </data-source>
+  </component>
+</project>

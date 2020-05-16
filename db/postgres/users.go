@@ -17,7 +17,8 @@ import "go-api/model"
 
 func (p PostgresDBStore) CreateUser(user *model.User) (string, error) {
 	sqlStatement :=
-		`INSERT INTO users(first_name, last_name, email, image, password, profile_id, deactivated, banned) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+		`INSERT INTO users(first_name, last_name, email, image, password, profile_id, deactivated, banned)
+ VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		user.FirstName,
@@ -32,9 +33,11 @@ func (p PostgresDBStore) CreateUser(user *model.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//if id != user.ID {
-	//	return "", CreateError
-	//}
+
+	/*if id != user.ID {
+		return "", CreateError
+	}*/
+
 	return id, nil
 }
 

@@ -7,6 +7,7 @@ import (
 type DataStore struct {
 	Closable
 	UserProvider userProvider
+	ProjectProvider projectProvider
 }
 
 type Closable interface {
@@ -18,4 +19,11 @@ type userProvider interface {
 	GetUser(id string) (*model.User, error)
 	UpdateUser(user *model.User) (*model.User, error)
 	RemoveUser(id string) error
+}
+
+type projectProvider interface {
+	CreateProject(project *model.Project) (string, error)
+	GetProject(id string) (*model.Project, error)
+	UpdateProject(project *model.Project) (*model.Project, error)
+	RemoveProject(id string) error
 }
