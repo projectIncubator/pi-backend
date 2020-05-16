@@ -24,17 +24,12 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 		//	project.Media,
 
 	).Scan(&id)
-	log.Println("wtf is create error")
 	if err != nil {
 		return "", err
 	}
-	log.Println("wtf is create error2")
-	log.Println(id)
-	log.Println(project.ID)
-	if id != project.ID {
+	/*if id != project.ID {
 		return "", CreateError
-	}
-	log.Println("wtf is create error3")
+	}*/
 	return id, nil
 }
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {

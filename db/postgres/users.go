@@ -21,9 +21,9 @@ func (p PostgresDBStore) CreateUser(user *model.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if id != user.ID {
+	/*if id != user.ID {
 		return "", CreateError
-	}
+	}*/
 	return id, nil
 }
 
