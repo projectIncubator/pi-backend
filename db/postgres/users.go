@@ -17,8 +17,7 @@ import "go-api/model"
 
 func (p PostgresDBStore) CreateUser(user *model.User) (string, error) {
 	sqlStatement :=
-		`INSERT INTO users(first_name, last_name, email, image, password, profile_id, deactivated, banned)
- VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
+		`INSERT INTO users(first_name, last_name, email, image, password, profile_id, deactivated, banned) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		user.FirstName,
@@ -42,6 +41,27 @@ func (p PostgresDBStore) CreateUser(user *model.User) (string, error) {
 }
 
 func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
+	sqlStatement := `SELECT id, first_name, last_name, email, image, password, profile_id, deactivated, banned FROM users WHERE id=$1;`
+	var user model.User
+	row := p.database.QueryRow(sqlStatement, id)
+	err := row.Scan(
+		&user.ID,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.Image,
+		&user.Password,
+		&user.ProfileID,
+		&user.Deactivated,
+		&user.Banned,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (p PostgresDBStore) GetUserProfile(id string) (*model.User, error) {
 	sqlStatement := `SELECT id, first_name, last_name, email, image, password, profile_id, deactivated, banned FROM users WHERE id=$1;`
 	var user model.User
 	row := p.database.QueryRow(sqlStatement, id)

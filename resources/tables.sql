@@ -14,6 +14,54 @@ CREATE TABLE users
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
+
+CREATE TABLE projects
+(
+    id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title         TEXT NOT NULL,
+    state         TEXT NOT NULL,
+    /* tags          TEXT,*/
+    user_id       uuid NOT NULL,
+    created_date  TIMESTAMPTZ      NOT NULL,
+    end_date      TIMESTAMPTZ      DEFAULT NULL,
+    oneliner      TEXT,
+    discussion_id TEXT,
+    /* members       Text,*/
+    Logo          Text,
+    CoverPhoto    Text,
+    /* Media         Text*/
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE follows
+(
+    followed_id   uuid,
+    follower_id   uuid,
+    FOREIGN KEY (followed_id) REFERENCES users(id),
+    FOREIGN KEY (follower_id) REFERENCES users(id),
+    PRIMARY KEY (followed_id,follower_id)
+);
+
+CREATE TABLE contributing
+(
+    user_id     uuid,
+    project_id  uuid,
+    is_admin    BOOLEAN DEFAULT false,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    PRIMARY KEY (user_id,project_id)
+);
+
+CREATE TABLE intrested
+(
+    user_id       uuid,
+    project_id    uuid,
+    notifications BOOLEAN DEFAULT true,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id),
+    PRIMARY KEY (user_id,project_id)
+);
+
 -- 3. Give a few examples to be added into your table
 INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
 VALUES ('Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later', FALSE, FALSE);

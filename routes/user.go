@@ -12,6 +12,7 @@ import (
 func (app *App) RegisterUserRoutes() {
 	app.router.HandleFunc("/users", app.CreateUser).Methods("POST")
 	app.router.HandleFunc("/users/{id}", app.GetUser).Methods("GET")
+	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
 	app.router.HandleFunc("/users", app.UpdateUser).Methods("PATCH")
 	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 	// app.router.HandleFunc("/users/{id}", app.GetAllUsers).Methods("GET")
@@ -45,6 +46,28 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
+	// Input
+	userID := mux.Vars(r)["id"]
+	// Validation
+	// 1. Of a particular type
+	//    i.e. check if its a string
+	// 2. Particular format
+	// 	  i.e. regex YYYY/MM/DD
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	usr, err := app.store.UserProvider.GetUser(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+
+func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	// Input
 	userID := mux.Vars(r)["id"]
 	// Validation
