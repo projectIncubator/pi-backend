@@ -15,7 +15,7 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.DeleteMember).Methods("DELETE")
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
-	app.router.HandleFunc("/projects/{proj_id}/members/{is_admin}", app.GetAdmins).Methods("GET")
+	//app.router.HandleFunc("/projects/{proj_id}/members/{is_admin}", app.GetAdmins).Methods("GET")
 }
 
 //When get project it should also return its members
@@ -140,6 +140,7 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+
 func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
 	userID := mux.Vars(r)["user_id"]
@@ -164,3 +165,27 @@ func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+/*
+func (app *App) GetAdmins(w http.ResponseWriter, r *http.Request) {
+	projectID := mux.Vars(r)["proj_id"]
+	userID := mux.Vars(r)["user_id"]
+	// TODO: More validation
+	if projectID == "" {
+		log.Printf("App.RemoveProejct - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if userID == "" {
+		log.Printf("App.RemoveProejct - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.ProjectProvider.ChangeAdmin(projectID, userID)
+	if err != nil {
+		log.Printf("App.RemoveProject - error getting all projects from provider %v", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+} */

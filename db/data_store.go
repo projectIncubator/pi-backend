@@ -27,4 +27,5 @@ type projectProvider interface {
 	UpdateProject(project *model.Project) (*model.Project, error)
 	RemoveProject(id string) error
 	RemoveMember(projectID string, userID string) error
+	ChangeAdmin(projectID string, userID string) error
 }

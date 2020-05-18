@@ -120,7 +120,29 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 	sqlStatement :=
 		`DELETE FROM contributing
 				WHERE projectID = $1 AND userID = $2
-				RETURNING id;`
+				RETURNING projectID, userID;`
+	var _projectID string
+	var _userID string
+	err := p.database.QueryRow(sqlStatement,projectID, userID,
+	).Scan(&_projectID,_userID)
+	if err != nil {
+		return err
+	}
+	if _projectID != projectID {
+		return CreateError
+	}
+	if _userID != userID {
+		return CreateError
+	}
+	return nil
+}
+
+func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
+	sqlStatement :=
+		`UPDATE contributing
+				SET is_admin = NOT is_admin 
+				WHERE projectID = $1 AND userID = $2
+				RETURNING projectID, userID;`
 	var _projectID string
 	var _userID string
 	err := p.database.QueryRow(sqlStatement,projectID, userID,
