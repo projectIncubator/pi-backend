@@ -9,6 +9,7 @@ type User struct {
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	Image        string `json:"img"`
+	ProfileID    string `json:"URL"`
 }
 
 type UserProfile struct {
@@ -18,7 +19,7 @@ type UserProfile struct {
 	Email        string `json:"email"`
 	Image        string `json:"img"`
 	Password     string `json:"password"`
-	ProfileURL   string `json:"profile_url"`
+	ProfileID   string `json:"profile_url"`
 	Deactivated  bool   `json:"deactivated"`
 	Banned       bool   `json:"banned"`
 	Bio          string  `json:"bio"`
@@ -41,7 +42,7 @@ type Project struct {
 	EndDate     time.Time `json:"end_date"`
 	OneLiner    string    `json:"oneliner"`
 	Discussion  string    `json:"discussion_id"`
-	Members     []string  `json:"members"`
+	Members     []User  `json:"members"`
 	Logo        string    `json:"logo"`
 	CoverPhoto  string    `json:"coverphoto"`
 //	Media       []string  `json:"media"`
