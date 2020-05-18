@@ -44,6 +44,29 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	if err != nil {
 		return nil, err
 	}
+	//another sql statement to fill in the members list
+	sqlStatement = `SELECT id, first_name, last_name, image, profile_id  FROM users WHERE id = (select user_id from contributing where project_id = $1);`
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var user model.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+			); err!= nil {
+			return nil, err
+		}
+		project.Members = append(project.Members, user)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	return &project, nil
 }
 

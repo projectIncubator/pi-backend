@@ -8,8 +8,8 @@ type User struct {
 	ID           string `json:"id"`
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
-	Image        string `json:"img"`
-	ProfileID    string `json:"URL"`
+	Image        string `json:"image"`
+	ProfileID    string `json:"profile_id"`
 }
 
 type UserProfile struct {

@@ -18,6 +18,8 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{proj_id}/members/{is_admin}", app.GetAdmins).Methods("GET")
 }
 
+//When get project it should also return its members
+
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var newProject model.Project
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
