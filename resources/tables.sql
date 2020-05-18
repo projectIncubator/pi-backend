@@ -7,9 +7,9 @@ CREATE TABLE users
     id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     first_name      TEXT NOT NULL,
     last_name       TEXT NOT NULL,
-    email           TEXT DEFAULT '' UNIQUE,
+    email           TEXT NOT NULL UNIQUE,
     image           TEXT,
-    password        TEXT,
+    password        TEXT NOT NULL,
     profile_id      TEXT UNIQUE,
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
