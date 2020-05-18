@@ -116,3 +116,51 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
+	projectID := mux.Vars(r)["proj_id"]
+	userID := mux.Vars(r)["user_id"]
+	// TODO: More validation
+	if projectID == "" {
+		log.Printf("App.RemoveProejct - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if userID == "" {
+		log.Printf("App.RemoveProejct - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.ProjectProvider.RemoveMember(projectID, userID)
+	if err != nil {
+		log.Printf("App.RemoveProject - error getting all projects from provider %v", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
+	projectID := mux.Vars(r)["proj_id"]
+	userID := mux.Vars(r)["user_id"]
+	// TODO: More validation
+	if projectID == "" {
+		log.Printf("App.RemoveProejct - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if userID == "" {
+		log.Printf("App.RemoveProejct - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.ProjectProvider.ChangeAdmin(projectID, userID)
+	if err != nil {
+		log.Printf("App.RemoveProject - error getting all projects from provider %v", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+

@@ -26,4 +26,5 @@ type projectProvider interface {
 	GetProject(id string) (*model.Project, error)
 	UpdateProject(project *model.Project) (*model.Project, error)
 	RemoveProject(id string) error
+	RemoveMember(projectID string, userID string) error
 }
