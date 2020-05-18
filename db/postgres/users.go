@@ -58,7 +58,6 @@ func (p PostgresDBStore) UpdateUser(user *model.User) (*model.User, error) {
 	err := p.database.QueryRow(sqlStatement,
 		user.ID,
 		user.FirstName,
-		user.FirstName,
 		user.LastName,
 		user.Email,
 		user.Image,
