@@ -7,7 +7,7 @@ import (
 
 func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	sqlStatement :=
-		`INSERT INTO projects(title, state, /*tags,*/ user_id, created_date, end_date, oneliner, discussion_id, /*members,*/ logo, coverphoto /*media*/) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+		`INSERT INTO projects(title, state, user_id, created_date, end_date, oneliner, discussion_id, logo, coverphoto ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		project.Title,
@@ -59,7 +59,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, error) {
 	sqlStatement :=
 		`UPDATE project
-				SET title = $2, stage = $3, /*tags = $4,*/ user_id = $4, created_date = $5, end_date = $6, oneliner = $7, discussion_id = $8, logo = $9, coverphoto = $10
+				SET title = $2, stage = $3, user_id = $4, created_date = $5, end_date = $6, oneliner = $7, discussion_id = $8, logo = $9, coverphoto = $10
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
