@@ -19,19 +19,27 @@ type UserProfile struct {
 	Email        string `json:"email"`
 	Image        string `json:"img"`
 	Password     string `json:"password"`
-	ProfileID   string `json:"profile_url"`
+	ProfileID    string `json:"profile_url"`
 	Deactivated  bool   `json:"deactivated"`
 	Banned       bool   `json:"banned"`
 	Bio          string  `json:"bio"`
 	Following    []User `json:"following"`
 	Followers    []User `json:"followers"`
-	Interested   []User `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
-	Contributing []User `json:"contributing"` // ^
-	Created      []User `json:"created"`      // ^
+	Interested   []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
+	Contributing []ProjectStub `json:"contributing"` // ^
+	Created      []ProjectStub `json:"created"`      // ^
 }
 
 
 // TODO: Make project state enum not string
+
+type ProjectStub struct {
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	State       string    `json:"state"`
+	Logo        string    `json:"logo"`
+}
+
 type Project struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`

@@ -26,7 +26,6 @@ CREATE TABLE projects
     end_date      TIMESTAMPTZ      DEFAULT NULL,
     oneliner      TEXT,
     discussion_id TEXT,
-    /* members       Text,*/
     Logo          Text,
     CoverPhoto    Text,
     /* Media         Text*/
@@ -37,8 +36,8 @@ CREATE TABLE follows
 (
     followed_id   uuid,
     follower_id   uuid,
-    FOREIGN KEY (followed_id) REFERENCES users(id),
-    FOREIGN KEY (follower_id) REFERENCES users(id),
+    FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (followed_id,follower_id)
 );
 
@@ -47,8 +46,8 @@ CREATE TABLE contributing
     user_id     uuid,
     project_id  uuid,
     is_admin    BOOLEAN DEFAULT false,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id,project_id)
 );
 
@@ -57,8 +56,8 @@ CREATE TABLE intrested
     user_id       uuid,
     project_id    uuid,
     notifications BOOLEAN DEFAULT true,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (project_id) REFERENCES projects(id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id,project_id)
 );
 
