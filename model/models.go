@@ -46,7 +46,7 @@ type Project struct {
 	State       string    `json:"state"`
 //	Tags        []string  `json:"tags"`
 	Creator     string    `json:"user_id"`
-	CreatedDate time.Time `json:"created_date"`
+	StartDate   time.Time `json:"start_date"`
 	EndDate     time.Time `json:"end_date"`
 	OneLiner    string    `json:"oneliner"`
 	Discussion  string    `json:"discussion_id"`

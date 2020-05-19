@@ -26,7 +26,7 @@ CREATE TABLE projects
     state         TEXT NOT NULL,
     /* tags          TEXT,*/
     user_id       uuid NOT NULL,
-    created_date  TIMESTAMPTZ      NOT NULL,
+    started_date  TIMESTAMPTZ      NOT NULL,
     end_date      TIMESTAMPTZ      DEFAULT NULL,
     oneliner      TEXT,
     discussion_id TEXT,
