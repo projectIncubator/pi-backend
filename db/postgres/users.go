@@ -36,7 +36,7 @@ func (p PostgresDBStore) CreateUser(user *model.UserProfile) (string, error) {
 }
 
 func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
-	sqlStatement := `SELECT id, first_name, last_name, image, password, profile_id FROM users WHERE id=$1;`
+	sqlStatement := `SELECT id, first_name, last_name, image, profile_id FROM users WHERE id=$1;`
 	var user model.User
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -47,6 +47,7 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 		&user.ProfileID,
 	)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	return &user, nil
@@ -71,12 +72,13 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users profile_id 
+	//People the user is following
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 						FROM users, follows
 						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
 	rows, err := p.database.Query(sqlStatement, id)
+
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +96,9 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
 		userProfile.Following = append(userProfile.Following, user)
 	}
-
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users profile_id 
+	log.Println("finish the first part")
+	//  followers of the user
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 						FROM users, follows
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
@@ -103,7 +106,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("before second loop")
 	for rows.Next() {
 		var user model.User
 
@@ -113,16 +116,19 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			&user.LastName,
 			&user.Image,
 			&user.ProfileID,
-		); err != nil { log.Fatal(err) }
+		); err != nil {
+			log.Fatal(err) }
 
 		userProfile.Followers = append(userProfile.Followers, user)
 	}
-
+	log.Println("finish the second part")
+	//Fill in the interested table
 	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
 						FROM projects, intrested
-						WHERE contributing.user_id = $1 AND intrested.project_id=projects.id;`
+						WHERE intrested.user_id = $1 AND intrested.project_id=projects.id;`
 
 	rows, err = p.database.Query(sqlStatement, id)
+	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
@@ -181,11 +187,11 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
 	return &userProfile, nil
 }
-
+//TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
 func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, password = $6, profile_id = $7, deactivated = $8, banned = $9
+				SET first_name = $2, last_name = $3, email = $4, image = $5, password = $6,/* profile_id = $7,*/ deactivated = $7, banned = $8
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -196,10 +202,12 @@ func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile
 		user.Email,
 		user.Image,
 		user.Password,
-		user.ProfileID,
+	//	user.ProfileID,
 		user.Deactivated,
 		user.Banned,
 	).Scan(&_id)
+	log.Println(err)
+	log.Println("updateError")
 	if err != nil {
 		return nil, err
 	}
@@ -229,19 +237,20 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 }
 
 func (p PostgresDBStore) FollowUser(follow *model.Follows) error {
+	log.Println("we are in followUser")
 	sqlStatement := `INSERT INTO follows(followed_id, follower_id) VALUES ($1, $2)
 						RETURNING followed_id, follower_id`
-	var _follow *model.Follows
+	//var _follow *model.Follows
+	var followed_id, follower_id string
+	log.Println("we are in followUser2")
 	err := p.database.QueryRow(sqlStatement,
 		follow.FollowedID,
 		follow.FollowerID,
-	).Scan(&_follow.FollowedID,&_follow.FollowerID)
-
+	).Scan(&followed_id, &follower_id)
+		/*Scan(&_follow.FollowedID,&_follow.FollowerID)*/
+	log.Println("we are in followUser3")
 	if err != nil {
 		return err
-	}
-	if _follow != follow {
-		return CreateError
 	}
 	return nil
 }

@@ -15,13 +15,10 @@ func (app *App) RegisterUserRoutes() {
 	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
 	app.router.HandleFunc("/users", app.UpdateUser).Methods("PATCH")
 	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("Delete")
-
 	app.router.HandleFunc("/follows", app.FollowUser).Methods("POST")
 	app.router.HandleFunc("/follows", app.UnfollowUser).Methods("DELETE")
-
 	app.router.HandleFunc("/intrested", app.IntrestedProject).Methods("POST")
 	app.router.HandleFunc("/intrested", app.UnintrestedProject).Methods("DELETE")
-
 	app.router.HandleFunc("/contributing", app.JoinProject).Methods("POST")
 	app.router.HandleFunc("/contributing", app.QuitProject).Methods("DELETE")
 }
@@ -140,28 +137,31 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
-
+	log.Println("1")
 	var follow model.Follows
 	reqBody, err := ioutil.ReadAll(r.Body)
-
+	log.Println("2")
 	if err != nil {
 		log.Printf("App.CreateUser - error reading request body %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	log.Println("3")
 	err = json.Unmarshal(reqBody, &follow) // Fill newUser with the values coming from frontend
 	if err != nil {
 		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	log.Println("4")
 	err = app.store.UserProvider.FollowUser(&follow)
+	log.Println(err)
 	if err != nil {
 		log.Printf("App.CreateUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	log.Println("5")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(follow)
 	return
