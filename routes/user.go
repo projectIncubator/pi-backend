@@ -130,7 +130,7 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := app.store.UserProvider.RemoveUser(userID)
 	if err != nil {
-		log.Printf("App.RemoveUser - error getting all users from provider %v", err)
+		log.Printf("App.RemoveUser - error removing the user %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

@@ -110,7 +110,7 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 
 	err := app.store.ProjectProvider.RemoveProject(projectID)
 	if err != nil {
-		log.Printf("App.RemoveProject - error getting all projects from provider %v", err)
+		log.Printf("App.RemoveProject - error removing the project %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -122,19 +122,19 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	userID := mux.Vars(r)["user_id"]
 	// TODO: More validation
 	if projectID == "" {
-		log.Printf("App.RemoveProejct - empty project id")
+		log.Printf("App.RemoveMember - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	if userID == "" {
-		log.Printf("App.RemoveProejct - empty user id")
+		log.Printf("App.RemoveMember - empty user id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	err := app.store.ProjectProvider.RemoveMember(projectID, userID)
 	if err != nil {
-		log.Printf("App.RemoveProject - error getting all projects from provider %v", err)
+		log.Printf("App.RemoveProject - error removing the member %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
