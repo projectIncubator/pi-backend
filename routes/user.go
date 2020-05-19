@@ -27,7 +27,7 @@ func (app *App) RegisterUserRoutes() {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.User
+	var newUser model.UserProfile
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	// TODO: Validate if the user already exist by checking the email ... here or on the side of postgres?
 	if err != nil {
@@ -83,7 +83,7 @@ func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	usr, err := app.store.UserProvider.GetUser(userID)
+	usr, err := app.store.UserProvider.GetUserProfile(userID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
