@@ -35,5 +35,4 @@ type projectProvider interface {
 	RemoveProject(id string) error
 	RemoveMember(projectID string, userID string) error
 	ChangeAdmin(projectID string, userID string) error
-	GetAdmin(projectID string) error
 }

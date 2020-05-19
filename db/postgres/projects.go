@@ -44,8 +44,10 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	//another sql statement to fill in the members list
-	sqlStatement = `SELECT id, first_name, last_name, image, profile_id  FROM users WHERE id = (select user_id from contributing where project_id = $1);`
+	//Fill in members array
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
+							FROM users, contributing
+							WHERE users.id = contributing.user_id AND contributing.project_id=$1;`
 	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
@@ -62,6 +64,30 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			return nil, err
 		}
 		project.Members = append(project.Members, user)
+	}
+	if err != nil {
+		return nil, err
+	}
+	//Fill in the admins array
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
+							FROM users, contributing
+							WHERE users.id = contributing.user_id AND contributing.project_id=$1 AND contributing.is_admin = true;`
+	rows, err = p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var user model.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err!= nil {
+			return nil, err
+		}
+		project.Admins = append(project.Admins, user)
 	}
 	if err != nil {
 		return nil, err
@@ -119,12 +145,12 @@ func (p PostgresDBStore) RemoveProject(id string) error {
 func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 	sqlStatement :=
 		`DELETE FROM contributing
-				WHERE projectID = $1 AND userID = $2
-				RETURNING projectID, userID;`
+				WHERE project_id = $1 AND user_id = $2
+				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
 	err := p.database.QueryRow(sqlStatement,projectID, userID,
-	).Scan(&_projectID,_userID)
+	).Scan(&_projectID,&_userID)
 	if err != nil {
 		return err
 	}
@@ -141,12 +167,12 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 	sqlStatement :=
 		`UPDATE contributing
 				SET is_admin = NOT is_admin 
-				WHERE projectID = $1 AND userID = $2
-				RETURNING projectID, userID;`
+				WHERE project_id = $1 AND user_id = $2
+				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
 	err := p.database.QueryRow(sqlStatement,projectID, userID,
-	).Scan(&_projectID,_userID)
+	).Scan(&_projectID,&_userID)
 	if err != nil {
 		return err
 	}
@@ -154,21 +180,6 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 		return CreateError
 	}
 	if _userID != userID {
-		return CreateError
-	}
-	return nil
-}
-
-func (p PostgresDBStore) GetAdmin(projectID string) error {
-	sqlStatement :=
-		`SELECT user_id FROM contributing WHERE project_id = $1 AND is_admin = true;`
-	var _projectID string
-	err := p.database.QueryRow(sqlStatement,projectID,
-	).Scan(&_projectID)
-	if err != nil {
-		return err
-	}
-	if _projectID != projectID {
 		return CreateError
 	}
 	return nil

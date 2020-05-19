@@ -50,7 +50,8 @@ type Project struct {
 	EndDate     time.Time `json:"end_date"`
 	OneLiner    string    `json:"oneliner"`
 	Discussion  string    `json:"discussion_id"`
-	Members     []User  `json:"members"`
+	Members     []User    `json:"members"`
+	Admins		[]User    `json: "admins"`
 	Logo        string    `json:"logo"`
 	CoverPhoto  string    `json:"coverphoto"`
 //	Media       []string  `json:"media"`
