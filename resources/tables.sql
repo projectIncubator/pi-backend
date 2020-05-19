@@ -14,7 +14,7 @@ CREATE TABLE users
     email           TEXT NOT NULL UNIQUE,
     image           TEXT,
     password        TEXT NOT NULL,
-    profile_id      TEXT UNIQUE,
+    profile_id      uuid UNIQUE      DEFAULT uuid_generate_v4(),
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
