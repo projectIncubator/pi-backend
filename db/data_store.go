@@ -20,10 +20,10 @@ type userProvider interface {
 	GetUserProfile(id string) (*model.UserProfile, error)
 	UpdateUser(user *model.UserProfile) (*model.UserProfile, error)
 	RemoveUser(id string) error
-	FollowUser(follow *model.Follows) error
-	UnfollowUser(follow *model.Follows) error
-	IntrestedProject(up *model.UserProject) error
-	UnintrestedProject(up *model.UserProject) error
+	FollowUser(followedID string, followerID string) error
+	UnfollowUser(followedID string, followerID string) error
+	InterestedProject(userID string, projectID string) error
+	UninterestedProject(userID string, projectID string) error
 	JoinProject(up *model.UserProject) error
 	QuitProject(up *model.UserProject) error
 }
