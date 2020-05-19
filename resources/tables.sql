@@ -26,7 +26,7 @@ CREATE TABLE projects
     state         TEXT NOT NULL,
     /* tags          TEXT,*/
     user_id       uuid NOT NULL,
-    started_date  TIMESTAMPTZ      NOT NULL,
+    start_date  TIMESTAMPTZ      NOT NULL,
     end_date      TIMESTAMPTZ      DEFAULT NULL,
     oneliner      TEXT,
     discussion_id TEXT,
@@ -38,11 +38,11 @@ CREATE TABLE projects
 
 CREATE TABLE follows
 (
-    followed_id   uuid,
     follower_id   uuid,
-    FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
+    followed_id   uuid,
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (followed_id,follower_id)
+    FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (follower_id,followed_id)
 );
 
 CREATE TABLE contributing

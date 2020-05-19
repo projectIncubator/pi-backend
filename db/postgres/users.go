@@ -235,31 +235,31 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 }
 
 
-func (p PostgresDBStore) FollowUser(followedID string, followerID string) error {
-	sqlStatement := `INSERT INTO follows(followed_id, follower_id) VALUES ($1, $2)
-						RETURNING followed_id, follower_id`
+func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {
+	sqlStatement := `INSERT INTO follows(follower_id, followed_id) VALUES ($1, $2)
+						RETURNING follower_id, followed_id`
 
 	var _followedID, _followerID string
 	err := p.database.QueryRow(sqlStatement,
-		followedID,
 		followerID,
-	).Scan(&_followedID,&_followerID)
+		followedID,
+	).Scan(&_followerID,&_followedID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p PostgresDBStore) UnfollowUser(followedID string, followerID string) error {
+func (p PostgresDBStore) UnfollowUser(followerID string, followedID string) error {
 	sqlStatement := `DELETE FROM follows
-						WHERE followed_id = $1 AND follower_id = $2
-						RETURNING followed_id, follower_id`
+						WHERE follower_id = $1 AND followed_id = $2
+						RETURNING follower_id, followed_id`
 
 	var _followedID, _followerID string
 	err := p.database.QueryRow(sqlStatement,
-		followedID,
 		followerID,
-	).Scan(&_followedID,&_followerID)
+		followedID,
+	).Scan(&_followerID,&_followedID)
 	if err != nil {
 		return err
 	}

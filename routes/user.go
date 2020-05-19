@@ -17,8 +17,8 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE")
 
-	app.router.HandleFunc("/users/{follower_id}/follows/{following_id}", app.FollowUser).Methods("POST")
-	app.router.HandleFunc("/users/{follower_id}/follows/{following_id}", app.UnfollowUser).Methods("DELETE")
+	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.FollowUser).Methods("POST")
+	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.UnfollowUser).Methods("DELETE")
 
 	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.InterestedProject).Methods("POST")
 	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.UninterestedProject).Methods("DELETE")
@@ -142,14 +142,14 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 
 
 	followerID := mux.Vars(r)["follower_id"]
-	followingID := mux.Vars(r)["following_id"]
+	followedID := mux.Vars(r)["followed_id"]
 
-	if followerID == "" || followingID == "" {
+	if followerID == "" || followedID == "" {
 		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err := app.store.UserProvider.FollowUser(followerID, followingID)
+	err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
 		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -162,15 +162,15 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
 	followerID := mux.Vars(r)["follower_id"]
-	followingID := mux.Vars(r)["following_id"]
+	followedID := mux.Vars(r)["followed_id"]
 
-	if followerID == "" || followingID == "" {
+	if followerID == "" || followedID == "" {
 		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err := app.store.UserProvider.UnfollowUser(followerID, followingID)
+	err := app.store.UserProvider.UnfollowUser(followerID, followedID)
 	if err != nil {
 		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
