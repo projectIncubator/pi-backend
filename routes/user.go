@@ -14,13 +14,19 @@ func (app *App) RegisterUserRoutes() {
 	app.router.HandleFunc("/users/{id}", app.GetUser).Methods("GET")
 	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
 	app.router.HandleFunc("/users", app.UpdateUser).Methods("PATCH")
-	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("Delete")
-	app.router.HandleFunc("/follows", app.FollowUser).Methods("POST")
-	app.router.HandleFunc("/follows", app.UnfollowUser).Methods("DELETE")
-	app.router.HandleFunc("/intrested", app.IntrestedProject).Methods("POST")
-	app.router.HandleFunc("/intrested", app.UnintrestedProject).Methods("DELETE")
-	app.router.HandleFunc("/contributing", app.JoinProject).Methods("POST")
-	app.router.HandleFunc("/contributing", app.QuitProject).Methods("DELETE")
+
+	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE")
+
+	app.router.HandleFunc("/users/{follower_id}/follows/{following_id}", app.FollowUser).Methods("POST")
+	app.router.HandleFunc("/users/{follower_id}/follows/{following_id}", app.UnfollowUser).Methods("DELETE")
+
+	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.InterestedProject).Methods("POST")
+	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.UninterestedProject).Methods("DELETE")
+
+
+	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.JoinProject).Methods("POST")
+	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
+
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -53,11 +59,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
 	// Input
 	userID := mux.Vars(r)["id"]
-	// Validation
-	// 1. Of a particular type
-	//    i.e. check if its a string
-	// 2. Particular format
-	// 	  i.e. regex YYYY/MM/DD
+
 	if userID == "" { // TODO: REGEX to validate other forms
 		log.Printf("App.GetOneUser - empty user id")
 		w.WriteHeader(http.StatusBadRequest)
@@ -137,172 +139,123 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
-	log.Println("1")
-	var follow model.Follows
-	reqBody, err := ioutil.ReadAll(r.Body)
-	log.Println("2")
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+
+
+	followerID := mux.Vars(r)["follower_id"]
+	followingID := mux.Vars(r)["following_id"]
+
+	if followerID == "" || followingID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	log.Println("3")
-	err = json.Unmarshal(reqBody, &follow) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.FollowUser(followerID, followingID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	log.Println("4")
-	err = app.store.UserProvider.FollowUser(&follow)
-	log.Println(err)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	log.Println("5")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(follow)
 	return
 }
 
 func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
-	var follow model.Follows
-	reqBody, err := ioutil.ReadAll(r.Body)
+	followerID := mux.Vars(r)["follower_id"]
+	followingID := mux.Vars(r)["following_id"]
 
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if followerID == "" || followingID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &follow) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.UnfollowUser(followerID, followingID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.UnfollowUser(&follow)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(follow)
 	return
 }
 
-func (app *App) IntrestedProject(w http.ResponseWriter, r *http.Request) {
+func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.InterestedProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.IntrestedProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }
 
-func (app *App) UnintrestedProject(w http.ResponseWriter, r *http.Request) {
+func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.UninterestedProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.UnintrestedProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }
 
 func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.JoinProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.JoinProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }
 
 func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.QuitProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.QuitProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }

@@ -51,7 +51,7 @@ CREATE TABLE contributing
     PRIMARY KEY (user_id,project_id)
 );
 
-CREATE TABLE intrested
+CREATE TABLE interested
 (
     user_id       uuid,
     project_id    uuid,

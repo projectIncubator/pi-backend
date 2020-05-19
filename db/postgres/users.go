@@ -236,100 +236,94 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 	return nil
 }
 
-func (p PostgresDBStore) FollowUser(follow *model.Follows) error {
-	log.Println("we are in followUser")
+
+func (p PostgresDBStore) FollowUser(followedID string, followerID string) error {
 	sqlStatement := `INSERT INTO follows(followed_id, follower_id) VALUES ($1, $2)
 						RETURNING followed_id, follower_id`
-	//var _follow *model.Follows
-	var followed_id, follower_id string
-	log.Println("we are in followUser2")
+
+	var _followedID, _followerID string
 	err := p.database.QueryRow(sqlStatement,
-		follow.FollowedID,
-		follow.FollowerID,
-	).Scan(&followed_id, &follower_id)
-		/*Scan(&_follow.FollowedID,&_follow.FollowerID)*/
-	log.Println("we are in followUser3")
+		followedID,
+		followerID,
+	).Scan(&_followedID,&_followerID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p PostgresDBStore) UnfollowUser(follow *model.Follows) error {
+func (p PostgresDBStore) UnfollowUser(followedID string, followerID string) error {
 	sqlStatement := `DELETE FROM follows 
 						WHERE followed_id = $1 AND follower_id = $2
 						RETURNING followed_id, follower_id`
-	var _follow *model.Follows
+
+	var _followedID, _followerID string
 	err := p.database.QueryRow(sqlStatement,
-		follow.FollowedID,
-		follow.FollowerID,
-	).Scan(&_follow.FollowedID,&_follow.FollowerID)
+		followedID,
+		followerID,
+	).Scan(&_followedID,&_followerID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p PostgresDBStore) IntrestedProject(up *model.UserProject) error {
-	sqlStatement := `INSERT INTO intrested(user_id, project_id) VALUES ($1, $2) 
+func (p PostgresDBStore) InterestedProject(userID string, projectID string) error {
+	sqlStatement := `INSERT INTO interested(user_id, project_id) VALUES ($1, $2) 
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-		).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+		).Scan(&_userID,&_projectID)
 
 	if err != nil {
 		return err
 	}
-	if _up != up {
-		return CreateError
-	}
 	return nil
 }
 
-func (p PostgresDBStore) UnintrestedProject(up *model.UserProject) error {
-	sqlStatement := `DELETE FROM intrested 
+func (p PostgresDBStore) UninterestedProject(userID string, projectID string) error {
+	sqlStatement := `DELETE FROM interested 
 						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-	).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+	).Scan(&_userID,&_projectID)
+
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p PostgresDBStore) JoinProject(up *model.UserProject) error {
+func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
 	sqlStatement := `INSERT INTO contributing(user_id, project_id) VALUES ($1, $2) 
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-	).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+	).Scan(&_userID,&_projectID)
 
 	if err != nil {
 		return err
 	}
-	if _up != up {
-		return CreateError
-	}
 	return nil
 }
 
-func (p PostgresDBStore) QuitProject(up *model.UserProject) error {
+func (p PostgresDBStore) QuitProject(userID string, projectID string) error {
 	sqlStatement := `DELETE FROM contributing
 						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-	).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+	).Scan(&_userID,&_projectID)
+
 	if err != nil {
 		return err
 	}
