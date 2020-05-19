@@ -158,3 +158,20 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 	}
 	return nil
 }
+
+func (p PostgresDBStore) GetAdmin(projectID string) error {
+	sqlStatement :=
+		`SELECT user_id FROM contributing WHERE project_id = $1 AND is_admin = true;`
+	var _projectID string
+	err := p.database.QueryRow(sqlStatement,projectID,
+	).Scan(&_projectID)
+	if err != nil {
+		return err
+	}
+	if _projectID != projectID {
+		return CreateError
+	}
+	return nil
+}
+
+
