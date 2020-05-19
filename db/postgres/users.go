@@ -73,7 +73,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//People the user is following
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
 						FROM users, follows
 						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
@@ -98,7 +98,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	}
 	log.Println("finish the first part")
 	//  followers of the user
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
+	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
 						FROM users, follows
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
@@ -206,8 +206,6 @@ func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile
 		user.Deactivated,
 		user.Banned,
 	).Scan(&_id)
-	log.Println(err)
-	log.Println("updateError")
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +251,7 @@ func (p PostgresDBStore) FollowUser(followedID string, followerID string) error 
 }
 
 func (p PostgresDBStore) UnfollowUser(followedID string, followerID string) error {
-	sqlStatement := `DELETE FROM follows 
+	sqlStatement := `DELETE FROM follows
 						WHERE followed_id = $1 AND follower_id = $2
 						RETURNING followed_id, follower_id`
 
@@ -269,7 +267,7 @@ func (p PostgresDBStore) UnfollowUser(followedID string, followerID string) erro
 }
 
 func (p PostgresDBStore) InterestedProject(userID string, projectID string) error {
-	sqlStatement := `INSERT INTO interested(user_id, project_id) VALUES ($1, $2) 
+	sqlStatement := `INSERT INTO interested(user_id, project_id) VALUES ($1, $2)
 						RETURNING user_id, project_id`
 	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
@@ -284,7 +282,7 @@ func (p PostgresDBStore) InterestedProject(userID string, projectID string) erro
 }
 
 func (p PostgresDBStore) UninterestedProject(userID string, projectID string) error {
-	sqlStatement := `DELETE FROM interested 
+	sqlStatement := `DELETE FROM interested
 						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
 	var _userID, _projectID string
@@ -300,7 +298,7 @@ func (p PostgresDBStore) UninterestedProject(userID string, projectID string) er
 }
 
 func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
-	sqlStatement := `INSERT INTO contributing(user_id, project_id) VALUES ($1, $2) 
+	sqlStatement := `INSERT INTO contributing(user_id, project_id) VALUES ($1, $2)
 						RETURNING user_id, project_id`
 	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,

@@ -1,6 +1,10 @@
 create extension "uuid-ossp" if not exists;
 -- 1. Add your table to drop if exists
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS contributing;
+DROP TABLE IF EXISTS interested;
 -- 2. Create your table
 CREATE TABLE users
 (
@@ -62,6 +66,7 @@ CREATE TABLE interested
 );
 
 -- 3. Give a few examples to be added into your table
+-- Examples User
 INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
 VALUES ('Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later', FALSE, FALSE);
 INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
@@ -70,5 +75,9 @@ INSERT INTO users (first_name, last_name, email, image, password, profile_id, de
 VALUES ('Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_2', FALSE, FALSE);
 INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
 VALUES ('Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', 'test', FALSE, FALSE);
+-- Examples Projects
+-- Examples Follows
+-- Examples Contributing
+-- Examples Interested
 -- 4. Check that they now exist in the database
 select * from users
