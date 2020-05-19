@@ -310,33 +310,37 @@ func (p PostgresDBStore) UninterestedProject(userID string, projectID string) er
 	return nil
 }
 
-func (p PostgresDBStore) JoinProject(up *model.UserProject) error {
+func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
 	sqlStatement := `INSERT INTO contributing(user_id, project_id) VALUES ($1, $2) 
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-	).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+	).Scan(&_userID,&_projectID)
 
 	if err != nil {
 		return err
 	}
-	if _up != up {
+	if _userID != userID {
+		return CreateError
+	}
+	if _projectID != projectID {
 		return CreateError
 	}
 	return nil
 }
 
-func (p PostgresDBStore) QuitProject(up *model.UserProject) error {
+func (p PostgresDBStore) QuitProject(userID string, projectID string) error {
 	sqlStatement := `DELETE FROM contributing
 						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
-	var _up *model.UserProject
+	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
-		up.UserID,
-		up.ProjectID,
-	).Scan(&_up.UserID,&_up.ProjectID)
+		userID,
+		projectID,
+	).Scan(&_userID,&_projectID)
+
 	if err != nil {
 		return err
 	}

@@ -219,57 +219,41 @@ func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.JoinProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.JoinProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }
 
 func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
 
-	var up model.UserProject
-	reqBody, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Printf("App.CreateUser - error reading request body %v", err)
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body",)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = json.Unmarshal(reqBody, &up) // Fill newUser with the values coming from frontend
+	err := app.store.UserProvider.QuitProject(userID, projectID)
 	if err != nil {
-		log.Printf("App.CreateUser - error unmarshaling request body %v", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err = app.store.UserProvider.QuitProject(&up)
-	if err != nil {
-		log.Printf("App.CreateUser - error creating user %v", err)
+		log.Printf("App.FollowUser - error creating user %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(up)
 	return
 }

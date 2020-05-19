@@ -24,8 +24,8 @@ type userProvider interface {
 	UnfollowUser(followedID string, followerID string) error
 	InterestedProject(userID string, projectID string) error
 	UninterestedProject(userID string, projectID string) error
-	JoinProject(up *model.UserProject) error
-	QuitProject(up *model.UserProject) error
+	JoinProject(userID string, projectID string) error
+	QuitProject(userID string, projectID string) error
 }
 
 type projectProvider interface {
