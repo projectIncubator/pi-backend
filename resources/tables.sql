@@ -76,7 +76,7 @@ CREATE TABLE interested
 CREATE TABLE project_has_theme
 (
     project_id    uuid,
-    theme_name    uuid,
+    theme_name    TEXT,
     primary_theme BOOLEAN DEFAULT false,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (theme_name) REFERENCES themes(name) ON DELETE CASCADE,
@@ -86,7 +86,7 @@ CREATE TABLE project_has_theme
 CREATE TABLE user_interested_theme
 (
     user_id     uuid,
-    theme_name  uuid,
+    theme_name  TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (theme_name) REFERENCES themes(name) ON DELETE CASCADE,
     PRIMARY KEY (user_id, theme_name)

@@ -1,4 +1,5 @@
 package routes
+
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -13,6 +14,9 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}", app.GetProject).Methods("GET")
 	app.router.HandleFunc("/projects", app.UpdateProject).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
+
+	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.AddTheme).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.DeleteTheme).Methods("DELETE")
 
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.DeleteMember).Methods("DELETE")
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
@@ -35,7 +39,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id , err := app.store.ProjectProvider.CreateProject(&newProject)
+	id, err := app.store.ProjectProvider.CreateProject(&newProject)
 	if err != nil {
 		log.Printf("App.CreateProject - error creating project %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -66,9 +70,8 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
-
 
 func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	// Input - POST JSON
@@ -94,10 +97,8 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
-
-
 
 func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["id"]
@@ -140,7 +141,6 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
-
 
 func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]

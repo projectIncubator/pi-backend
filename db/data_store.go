@@ -6,7 +6,7 @@ import (
 
 type DataStore struct {
 	Closable
-	UserProvider userProvider
+	UserProvider    userProvider
 	ProjectProvider projectProvider
 }
 
@@ -26,6 +26,8 @@ type userProvider interface {
 	UninterestedProject(userID string, projectID string) error
 	JoinProject(userID string, projectID string) error
 	QuitProject(userID string, projectID string) error
+	InterestedTheme(userID string, name string) error
+	UninterestedTheme(userID string, name string) error
 }
 
 type projectProvider interface {
