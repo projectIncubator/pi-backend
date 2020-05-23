@@ -8,6 +8,7 @@ type DataStore struct {
 	Closable
 	UserProvider    userProvider
 	ProjectProvider projectProvider
+	ThemeProvider   themeProvider
 }
 
 type Closable interface {
@@ -39,4 +40,12 @@ type projectProvider interface {
 	ChangeAdmin(projectID string, userID string) error
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
+}
+
+type themeProvider interface {
+	CreateTheme(theme *model.Theme) error
+	GetTheme(themeName string) error
+	UpdateTheme(theme *model.Theme) error
+	GetProjectsWithTheme(themeName string) error
+	DeleteTheme(themeName string) error
 }
