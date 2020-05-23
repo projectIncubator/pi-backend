@@ -16,7 +16,7 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
 	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.AddTheme).Methods("POST")
-	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.DeleteTheme).Methods("DELETE")
+	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.RemoveTheme).Methods("DELETE")
 
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.DeleteMember).Methods("DELETE")
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
@@ -132,7 +132,7 @@ func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
+func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]
 	projectID := mux.Vars(r)["id"]
 
@@ -142,7 +142,7 @@ func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.DeleteTheme(themeName, projectID)
+	err := app.store.ProjectProvider.RemoveTheme(themeName, projectID)
 	if err != nil {
 		log.Printf("App.RemoveProject - error removing the project %v", err)
 		w.WriteHeader(http.StatusNotFound)

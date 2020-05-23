@@ -193,7 +193,7 @@ func (p PostgresDBStore) AddTheme(themeName string, projectID string) error {
 	return nil
 }
 
-func (p PostgresDBStore) DeleteTheme(themeName string, projectID string) error {
+func (p PostgresDBStore) RemoveTheme(themeName string, projectID string) error {
 	sqlStatement := `DELETE FROM project_has_theme
 						WHERE theme_name = $1 AND project_id = $2
 						RETURNING theme_name, project_id`
