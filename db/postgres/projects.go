@@ -18,7 +18,6 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 		project.Discussion,
 		project.Logo,
 		project.CoverPhoto,
-
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -60,14 +59,12 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			&user.LastName,
 			&user.Image,
 			&user.ProfileID,
-			); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 		project.Members = append(project.Members, user)
 	}
-	if err != nil {
-		return nil, err
-	}
+
 	//Fill in the admins array
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 							FROM users, contributing
@@ -84,13 +81,10 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			&user.LastName,
 			&user.Image,
 			&user.ProfileID,
-		); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 		project.Admins = append(project.Admins, user)
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return &project, nil
@@ -149,8 +143,7 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err := p.database.QueryRow(sqlStatement,projectID, userID,
-	).Scan(&_projectID,&_userID)
+	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -171,8 +164,7 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err := p.database.QueryRow(sqlStatement,projectID, userID,
-	).Scan(&_projectID,&_userID)
+	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -185,4 +177,35 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 	return nil
 }
 
+func (p PostgresDBStore) AddTheme(themeName string, projectID string) error {
+	sqlStatement := `INSERT INTO project_has_theme(theme_name, project_id) VALUES ($1, $2)
+						RETURNING theme_name, project_id`
 
+	var _themeName, _projectID string
+	err := p.database.QueryRow(sqlStatement,
+		themeName,
+		projectID,
+	).Scan(_themeName, _projectID)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p PostgresDBStore) DeleteTheme(themeName string, projectID string) error {
+	sqlStatement := `DELETE FROM project_has_theme
+						WHERE theme_name = $1 AND project_id = $2
+						RETURNING theme_name, project_id`
+
+	var _userID, _themeName string
+	err := p.database.QueryRow(sqlStatement,
+		themeName,
+		projectID,
+	).Scan(&_userID, &_themeName)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}

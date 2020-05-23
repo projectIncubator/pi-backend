@@ -52,14 +52,9 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
-	// Input
 	projectID := mux.Vars(r)["id"]
-	// Validation
-	// 1. Of a particular type
-	//    i.e. check if its a string
-	// 2. Particular format
-	// 	  i.e. regex YYYY/MM/DD
-	if projectID == "" { // TODO: REGEX to validate other forms
+
+	if projectID == "" {
 		log.Printf("App.GetOneUser - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -74,9 +69,6 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
-	// Input - POST JSON
-	// Validation
-	// TODO
 	var updatedProject model.Project
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -102,7 +94,7 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["id"]
-	// TODO: More validation
+
 	if projectID == "" {
 		log.Printf("App.RemoveProejct - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
@@ -118,10 +110,53 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
+	themeName := mux.Vars(r)["theme_name"]
+	projectID := mux.Vars(r)["id"]
+
+	if themeName == "" || projectID == "" {
+		log.Printf("App.RemoveMember - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.ProjectProvider.AddTheme(themeName, projectID)
+
+	if err != nil {
+		log.Printf("App.CreateProject - error creating project %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+
+	return
+}
+
+func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
+	themeName := mux.Vars(r)["theme_name"]
+	projectID := mux.Vars(r)["id"]
+
+	if themeName == "" || projectID == "" {
+		log.Printf("App.RemoveProejct - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.ProjectProvider.DeleteTheme(themeName, projectID)
+	if err != nil {
+		log.Printf("App.RemoveProject - error removing the project %v", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+
+	return
+}
+
 func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
 	userID := mux.Vars(r)["user_id"]
-	// TODO: More validation
+
 	if projectID == "" {
 		log.Printf("App.RemoveMember - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
@@ -145,7 +180,7 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
 	userID := mux.Vars(r)["user_id"]
-	// TODO: More validation
+
 	if projectID == "" {
 		log.Printf("App.RemoveProejct - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
