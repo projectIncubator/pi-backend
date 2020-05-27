@@ -6,8 +6,9 @@ import (
 
 type DataStore struct {
 	Closable
-	UserProvider userProvider
+	UserProvider    userProvider
 	ProjectProvider projectProvider
+	ThemeProvider   themeProvider
 }
 
 type Closable interface {
@@ -26,6 +27,8 @@ type userProvider interface {
 	UninterestedProject(userID string, projectID string) error
 	JoinProject(userID string, projectID string) error
 	QuitProject(userID string, projectID string) error
+	InterestedTheme(userID string, name string) error
+	UninterestedTheme(userID string, name string) error
 }
 
 type projectProvider interface {
@@ -35,4 +38,14 @@ type projectProvider interface {
 	RemoveProject(id string) error
 	RemoveMember(projectID string, userID string) error
 	ChangeAdmin(projectID string, userID string) error
+	AddTheme(themeName string, projectID string) error
+	RemoveTheme(themeName string, projectID string) error
+}
+
+type themeProvider interface {
+	CreateTheme(theme *model.Theme) error
+	GetTheme(themeName string) (*model.Theme, error)
+	UpdateTheme(theme *model.Theme) (string, error)
+	//GetProjectsWithTheme(themeName string) error
+	DeleteTheme(themeName string) error
 }

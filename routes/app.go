@@ -43,7 +43,8 @@ func (app *App) RegisterRoutes() {
 	app.RegisterUserRoutes()
 	// app.RegisterUserProfileRoutes()
 	// app.RegisterProfileRoutes()
-	 app.RegisterProjectRoutes()
+	app.RegisterProjectRoutes()
+	app.RegisterThemeRoutes()
 	// app.RegisterDiscussionRoutes()
 }
 
