@@ -12,9 +12,9 @@ import (
 func (app *App) RegisterThemeRoutes() {
 	app.router.HandleFunc("/themes", app.CreateTheme).Methods("POST")
 	app.router.HandleFunc("/themes/{theme_name}", app.GetTheme).Methods("GET")
-	app.router.HandleFunc("/themes/{theme_name}", app.UpdateTheme).Methods("PATCH")
+	app.router.HandleFunc("/themes", app.UpdateTheme).Methods("PATCH")
 
-	app.router.HandleFunc("/themes/{theme_name}", app.GetProjectsWithTheme).Methods("GET")
+	//app.router.HandleFunc("/themes/{theme_name}", app.GetProjectsWithTheme).Methods("GET")
 
 	app.router.HandleFunc("/themes/{theme_name}", app.DeleteTheme).Methods("DELETE")
 }
@@ -39,27 +39,27 @@ func (app *App) CreateTheme(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	//newTheme.Name = id
+
 	w.WriteHeader(http.StatusCreated)
 	//_ = json.NewEncoder(w).Encode(newTheme)
 	return
 }
 
 func (app *App) GetTheme(w http.ResponseWriter, r *http.Request) {
-	themeName := mux.Vars(r)["id"]
+	themeName := mux.Vars(r)["theme_name"]
 
 	if themeName == "" {
 		log.Printf("App.GetOneUser - empty project id")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err := app.store.ThemeProvider.GetTheme(themeName)
+	theme, err := app.store.ThemeProvider.GetTheme(themeName)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	//_ = json.NewEncoder(w).Encode(theme) // <- Sending the theme as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(theme) // <- Sending the theme as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
 func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
@@ -76,34 +76,34 @@ func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = app.store.ThemeProvider.UpdateTheme(&updatedTheme)
+	name, err := app.store.ThemeProvider.UpdateTheme(&updatedTheme)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	//_ = json.NewEncoder(w).Encode(theme) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(name) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
-func (app *App) GetProjectsWithTheme(w http.ResponseWriter, r *http.Request) {
-	themeName := mux.Vars(r)["id"]
-
-	if themeName == "" {
-		log.Printf("App.GetProjectsWithTheme - empty theme name")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	err := app.store.ThemeProvider.GetProjectsWithTheme(themeName)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	//_ = json.NewEncoder(w).Encode(projects) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
-}
+//func (app *App) GetProjectsWithTheme(w http.ResponseWriter, r *http.Request) {
+//	themeName := mux.Vars(r)["id"]
+//
+//	if themeName == "" {
+//		log.Printf("App.GetProjectsWithTheme - empty theme name")
+//		w.WriteHeader(http.StatusBadRequest)
+//		return
+//	}
+//	err := app.store.ThemeProvider.GetProjectsWithTheme(themeName)
+//	if err != nil {
+//		w.WriteHeader(http.StatusNotFound)
+//		return
+//	}
+//	w.WriteHeader(http.StatusOK)
+//	//_ = json.NewEncoder(w).Encode(projects) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+//}
 
 func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
-	themeName := mux.Vars(r)["id"]
+	themeName := mux.Vars(r)["theme_name"]
 
 	if themeName == "" {
 		log.Printf("App.DeleteTheme - empty theme name")

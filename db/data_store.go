@@ -44,8 +44,8 @@ type projectProvider interface {
 
 type themeProvider interface {
 	CreateTheme(theme *model.Theme) error
-	GetTheme(themeName string) error
-	UpdateTheme(theme *model.Theme) error
-	GetProjectsWithTheme(themeName string) error
+	GetTheme(themeName string) (*model.Theme, error)
+	UpdateTheme(theme *model.Theme) (string, error)
+	//GetProjectsWithTheme(themeName string) error
 	DeleteTheme(themeName string) error
 }

@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func (p PostgresDBStore) CreateTheme(theme *model.Theme) (string, error) {
+func (p PostgresDBStore) CreateTheme(theme *model.Theme) error {
 	sqlStatement :=
 		`INSERT INTO themes(name, colour, logo, description) VALUES ($1, $2, $3, $4) RETURNING name`
 
@@ -18,10 +18,10 @@ func (p PostgresDBStore) CreateTheme(theme *model.Theme) (string, error) {
 	).Scan(&name)
 
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return name, nil
+	return nil
 }
 
 func (p PostgresDBStore) GetTheme(themeName string) (*model.Theme, error) {
@@ -67,6 +67,7 @@ func (p PostgresDBStore) UpdateTheme(theme *model.Theme) (string, error) {
 
 //TODO: add GetProjectsWithTheme function
 func (p PostgresDBStore) GetProjectsWithTheme(themeName string) error {
+	// Get all projects by theme
 	return nil
 }
 
