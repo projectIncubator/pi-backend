@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"go-api/model"
+	"log"
 )
 
 func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
@@ -164,6 +165,25 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 }
 
 func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
+	//Make sure the user is not changing the only admin
+	_sqlStatement := `SELECT COUNT(*) FROM contributing WHERE is_admin = true;`
+	var _count int
+	_err := p.database.QueryRow(_sqlStatement).Scan(&_count)
+	if _err != nil {
+		return _err
+	}
+	if _count == 1 {
+		_sqlStatement:= `SELECT user_id FROM contributing WHERE is_admin = true;`
+		var _userID string
+		_err = p.database.QueryRow(_sqlStatement).Scan(&_userID)
+		if _err != nil {
+			return _err
+		}
+		if _userID == userID {
+			log.Printf("App.ToggleProejct - there must be at least one admin")
+			return CreateError
+		}
+	}
 	sqlStatement :=
 		`UPDATE contributing
 				SET is_admin = NOT is_admin 
