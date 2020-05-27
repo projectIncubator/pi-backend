@@ -43,7 +43,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	newProject.ID = id
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(newProject)
+	_ = json.NewEncoder(w).Encode(newProject.ID)
 	return
 }
 
@@ -90,11 +90,12 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	// TODO: Validate that the updated project exists
 	project, err := app.store.ProjectProvider.UpdateProject(&updatedProject)
 	if err != nil {
+		log.Printf("App.UpdateProject - was unable to update changes")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(project.ID) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
 
@@ -115,6 +116,7 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(projectID)
 }
 
 func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
