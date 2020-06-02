@@ -1,10 +1,12 @@
 create extension "uuid-ossp" if not exists;
+
 -- 1. Add your table to drop if exists
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS follows;
 DROP TABLE IF EXISTS contributing;
 DROP TABLE IF EXISTS interested;
+
 -- 2. Create your table
 CREATE TABLE users
 (
@@ -44,6 +46,41 @@ CREATE TABLE themes
     description TEXT
 );
 
+CREATE TABLE discussion
+(
+    proj_id    uuid,
+    disc_num   SERIAL,
+    creator    uuid NOT NULL,
+    creation_date DATE,
+    title      TEXT,
+    text       TEXT,
+    closed     BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (proj_id) REFERENCES projects(id),
+    FOREIGN KEY (creator) REFERENCES users(id),
+    PRIMARY KEY (proj_id, disc_num)
+);
+
+CREATE TABLE post
+(
+    proj_id     uuid,
+    disc_num    INTEGER,
+    post_num    SERIAL,
+    creator     uuid NOT NULL,
+    creation_date DATE,
+    text        TEXT,
+    pinned      BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (proj_id)  REFERENCES projects(id),
+    FOREIGN KEY (disc_num) REFERENCES discussion(disc_num),
+    FOREIGN KEY (creator)  REFERENCES users(id),
+    PRIMARY KEY (proj_id, disc_num, post_num)
+);
+
+CREATE TABLE reaction
+(
+    reaction_type TEXT PRIMARY KEY,
+    reaction_icon TEXT NOT NULL
+);
+
 CREATE TABLE follows
 (
     follower_id   uuid,
@@ -51,6 +88,15 @@ CREATE TABLE follows
     FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (follower_id,followed_id)
+);
+
+CREATE TABLE user_react_post
+(
+    user_id     uuid,
+    proj_id     uuid,
+    disc_num    INTEGER,
+    post_num    INTEGER,
+
 );
 
 CREATE TABLE contributing
