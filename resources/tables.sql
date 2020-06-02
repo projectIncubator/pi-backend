@@ -24,16 +24,24 @@ CREATE TABLE projects
     id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     title         TEXT NOT NULL,
     state         TEXT NOT NULL,
-    /* tags          TEXT,*/
+    /* tags       TEXT,*/
     user_id       uuid NOT NULL,
-    start_date  TIMESTAMPTZ      NOT NULL,
+    start_date    TIMESTAMPTZ      NOT NULL,
     end_date      TIMESTAMPTZ      DEFAULT NULL,
     oneliner      TEXT,
     discussion_id TEXT,
-    Logo          Text,
-    CoverPhoto    Text,
+    Logo          TEXT,
+    CoverPhoto    TEXT,
     /* Media         Text*/
     FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE themes
+(
+    name        TEXT PRIMARY KEY,
+    colour      TEXT NOT NULL,
+    logo        TEXT NOT NULL,
+    description TEXT
 );
 
 CREATE TABLE follows
@@ -63,6 +71,25 @@ CREATE TABLE interested
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id,project_id)
+);
+
+CREATE TABLE project_has_theme
+(
+    project_id    uuid,
+    theme_name    TEXT,
+    primary_theme BOOLEAN DEFAULT false,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (theme_name) REFERENCES themes(name) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, theme_name)
+);
+
+CREATE TABLE user_interested_theme
+(
+    user_id     uuid,
+    theme_name  TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (theme_name) REFERENCES themes(name) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, theme_name)
 );
 
 -- 3. Give a few examples to be added into your table

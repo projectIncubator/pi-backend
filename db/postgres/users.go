@@ -87,12 +87,14 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		var user model.User
 
 		if err := rows.Scan(
-				&user.ID,
-				&user.FirstName,
-				&user.LastName,
-				&user.Image,
-				&user.ProfileID,
-			); err != nil { log.Fatal(err) }
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			log.Fatal(err)
+		}
 
 		userProfile.Following = append(userProfile.Following, user)
 	}
@@ -117,7 +119,8 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			&user.Image,
 			&user.ProfileID,
 		); err != nil {
-			log.Fatal(err) }
+			log.Fatal(err)
+		}
 
 		userProfile.Followers = append(userProfile.Followers, user)
 	}
@@ -141,7 +144,9 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			&proj.Title,
 			&proj.State,
 			&proj.Logo,
-		); err != nil { log.Fatal(err) }
+		); err != nil {
+			log.Fatal(err)
+		}
 
 		userProfile.Interested = append(userProfile.Interested, proj)
 	}
@@ -163,12 +168,14 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			&proj.Title,
 			&proj.State,
 			&proj.Logo,
-		); err != nil { log.Fatal(err) }
+		); err != nil {
+			log.Fatal(err)
+		}
 
 		userProfile.Contributing = append(userProfile.Contributing, proj)
 	}
 
-	sqlStatement  =  `SELECT projects.id, projects.title, projects.state, projects.logo
+	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
 						FROM projects
 						WHERE projects.user_id = $1;`
 
@@ -180,13 +187,16 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			&proj.Title,
 			&proj.State,
 			&proj.Logo,
-		); err != nil { log.Fatal(err) }
+		); err != nil {
+			log.Fatal(err)
+		}
 
 		userProfile.Created = append(userProfile.Created, proj)
 	}
 
 	return &userProfile, nil
 }
+
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
 func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
@@ -202,7 +212,7 @@ func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile
 		user.Email,
 		user.Image,
 		user.Password,
-	//	user.ProfileID,
+		//	user.ProfileID,
 		user.Deactivated,
 		user.Banned,
 	).Scan(&_id)
@@ -234,7 +244,6 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 	return nil
 }
 
-
 func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {
 	sqlStatement := `INSERT INTO follows(follower_id, followed_id) VALUES ($1, $2)
 						RETURNING follower_id, followed_id`
@@ -243,7 +252,7 @@ func (p PostgresDBStore) FollowUser(followerID string, followedID string) error 
 	err := p.database.QueryRow(sqlStatement,
 		followerID,
 		followedID,
-	).Scan(&_followerID,&_followedID)
+	).Scan(&_followerID, &_followedID)
 	if err != nil {
 		return err
 	}
@@ -259,7 +268,7 @@ func (p PostgresDBStore) UnfollowUser(followerID string, followedID string) erro
 	err := p.database.QueryRow(sqlStatement,
 		followerID,
 		followedID,
-	).Scan(&_followerID,&_followedID)
+	).Scan(&_followerID, &_followedID)
 	if err != nil {
 		return err
 	}
@@ -273,7 +282,7 @@ func (p PostgresDBStore) InterestedProject(userID string, projectID string) erro
 	err := p.database.QueryRow(sqlStatement,
 		userID,
 		projectID,
-		).Scan(&_userID,&_projectID)
+	).Scan(&_userID, &_projectID)
 
 	if err != nil {
 		return err
@@ -289,7 +298,7 @@ func (p PostgresDBStore) UninterestedProject(userID string, projectID string) er
 	err := p.database.QueryRow(sqlStatement,
 		userID,
 		projectID,
-	).Scan(&_userID,&_projectID)
+	).Scan(&_userID, &_projectID)
 
 	if err != nil {
 		return err
@@ -304,7 +313,7 @@ func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
 	err := p.database.QueryRow(sqlStatement,
 		userID,
 		projectID,
-	).Scan(&_userID,&_projectID)
+	).Scan(&_userID, &_projectID)
 
 	if err != nil {
 		return err
@@ -320,7 +329,40 @@ func (p PostgresDBStore) QuitProject(userID string, projectID string) error {
 	err := p.database.QueryRow(sqlStatement,
 		userID,
 		projectID,
-	).Scan(&_userID,&_projectID)
+	).Scan(&_userID, &_projectID)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p PostgresDBStore) InterestedTheme(userID string, themeName string) error {
+	sqlStatement := `INSERT INTO user_interested_theme(user_id, theme_name) VALUES ($1, $2)
+						RETURNING user_id, theme_name`
+
+	var _userID, _themeName string
+	err := p.database.QueryRow(sqlStatement,
+		userID,
+		themeName,
+	).Scan(&_userID, &_themeName)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p PostgresDBStore) UninterestedTheme(userID string, themeName string) error {
+	sqlStatement := `DELETE FROM interested
+						WHERE user_id = $1 AND project_id = $2
+						RETURNING user_id, project_id`
+
+	var _userID, _themeName string
+	err := p.database.QueryRow(sqlStatement,
+		userID,
+		themeName,
+	).Scan(&_userID, &_themeName)
 
 	if err != nil {
 		return err

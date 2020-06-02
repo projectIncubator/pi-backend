@@ -23,6 +23,8 @@ func (app *App) RegisterUserRoutes() {
 	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.InterestedProject).Methods("POST")
 	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.UninterestedProject).Methods("DELETE")
 
+	app.router.HandleFunc("/users/{user_id}/interested/{theme_name}", app.InterestedTheme).Methods("POST")
+	app.router.HandleFunc("/users/{user_id}/interested/{theme_name}", app.UninterestedTheme).Methods("DELETE")
 
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.JoinProject).Methods("POST")
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
@@ -140,12 +142,11 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 
-
 	followerID := mux.Vars(r)["follower_id"]
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -165,7 +166,7 @@ func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -185,7 +186,7 @@ func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -205,7 +206,47 @@ func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.UserProvider.UninterestedProject(userID, projectID)
+	if err != nil {
+		log.Printf("App.FollowUser - error creating user %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	return
+}
+
+func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	themeName := mux.Vars(r)["theme_name"]
+
+	if userID == "" || themeName == "" {
+		log.Printf("App.FollowUser - error reading request body")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.UserProvider.InterestedTheme(userID, themeName)
+	if err != nil {
+		log.Printf("App.FollowUser - error creating user %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+	return
+}
+
+func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["user_id"]
+	projectID := mux.Vars(r)["project_id"]
+
+	if userID == "" || projectID == "" {
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -225,7 +266,7 @@ func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -245,7 +286,7 @@ func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
-		log.Printf("App.FollowUser - error reading request body",)
+		log.Printf("App.FollowUser - error reading request body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
