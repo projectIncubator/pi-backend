@@ -1,8 +1,9 @@
 package routes
 
 import (
-	"context"
 	"cloud.google.com/go/storage"
+	"context"
+	"github.com/gorilla/mux"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 func (app *App) RegisterGoogleCloudRoutes() {
 	app.router.HandleFunc("/bucket/upload", app.AddObject).Methods("PUT")
+	app.router.HandleFunc("/bucket/delete/{objectName}", app.DeleteObject).Methods("DELETE")
 
 }
 
@@ -52,4 +54,22 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	return
+}
+
+
+func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
+	bucketName := os.Getenv("BUCKET_NAME")
+	ctx := context.Background()
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+
+	client, _ := storage.NewClient(ctx)
+	object := mux.Vars(r)["objectName"]
+	//TODO check if the file exists if it is valid object name
+
+	o := client.Bucket(bucketName).Object(object)
+	if err := o.Delete(ctx); err != nil {
+		return
+	}
 }
