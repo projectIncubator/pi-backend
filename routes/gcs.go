@@ -38,7 +38,7 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageFile, _, err := r.FormFile("image")
+	imageFile, header, err := r.FormFile("image")
 
 	if err != nil {
 		log.Println("App.AddObject - image is absent: " + err.Error())
@@ -48,6 +48,9 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	ext, err := utils.CheckMime(imageFile)
 
 	name := "projects/"+projectID+"/"+uuid.New().String()+ext
+
+	// TODO: Add filename to Media struct
+	filename := header.Filename
 
 	// TODO: If destination == coverphoto - set coverphoto
 	// TODO: If destination == logo - set logo
