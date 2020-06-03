@@ -4,7 +4,9 @@ go 1.14
 
 require (
 	cloud.google.com/go/storage v1.8.0
+	github.com/gabriel-vasile/mimetype v1.1.0
 	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/lib/pq v1.3.0
 	github.com/rs/cors v1.7.0

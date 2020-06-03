@@ -1,55 +1,71 @@
 package routes
 
 import (
-	"context"
-	"cloud.google.com/go/storage"
-	"io"
+	"github.com/gorilla/mux"
+	"go-api/db/cloud"
+	"go-api/utils"
 	"log"
 	"net/http"
-	"os"
-	"time"
+	"github.com/google/uuid"
 )
 
 func (app *App) RegisterGoogleCloudRoutes() {
-	app.router.HandleFunc("/bucket/upload", app.AddObject).Methods("PUT")
-
+	app.router.HandleFunc("/project/{project_id}/upload", app.AddObject).Methods("PUT").Queries("destination", "{destination}")
 }
 
+const MaxFileSize = 6 << 20 // 6 MB
+
 func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
-	log.Printf("testing entering")
-	//projectID := os.Getenv("YOUR_PROJECT_ID")
-	bucketName := os.Getenv("BUCKET_NAME")
+	// get url info
+	projectID := mux.Vars(r)["project_id"]
+	destination := r.FormValue("destination")
 
-	// Opening file
-	f, err := os.Open("notes.txt")
+	// TODO: Check if projectID empty or valid
+	// TODO: Check if action done by admins --> someone who is allowed
+
+	// Read multipart form (image)
+	r.Body = http.MaxBytesReader(w, r.Body, MaxFileSize+512)
+	parseErr := r.ParseMultipartForm(MaxFileSize)
+	if parseErr != nil {
+		log.Println("App.AddObject - failed to parse multipart form")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if r.MultipartForm == nil || r.MultipartForm.File == nil {
+		log.Println("App.AddObject - expecting multipart form file")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	imageFile, _, err := r.FormFile("image")
+
 	if err != nil {
+		log.Println("App.AddObject - image is absent: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer f.Close()
+	ext, err := utils.CheckMime(imageFile)
 
-	ctx := context.Background()
+	name := "projects/"+projectID+"/"+uuid.New().String()+ext
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
-	defer cancel()
+	// TODO: If destination == coverphoto - set coverphoto
+	// TODO: If destination == logo - set logo
+	// TODO: If destination == media, append to media
 
-	client, err := storage.NewClient(ctx)
+	err = cloud.GCSUploader(name, imageFile)
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	} else {
+		w.WriteHeader(http.StatusOK)
+		if destination == "coverphoto" {
+			// TODO: Set Project.Coverphoto as this new url
+		}
+		if destination == "logo" {
+			// TODO: Set Project.Logo as this new url
+		}
+		// TODO: Append to Project.media regardless
 		return
 	}
-	// bucket := client.Bucket(bucketName)
-	object := "johnsnotes.txt"
-	wc := client.Bucket(bucketName).Object(object).NewWriter(ctx)
-	if _, err = io.Copy(wc, f); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if err := wc.Close(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	return
 }
