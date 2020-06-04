@@ -11,8 +11,8 @@ import (
 
 
 func (app *App) RegisterDiscussionRoutes() {
-	app.router.HandleFunc("/project/{proj_id}/discussion", app.CreateDiscussion).Methods("POST")
-	app.router.HandleFunc("/project/{proj_id}/discussion/{disc_num}", app.GetDiscussion).Methods("GET")
+	app.router.HandleFunc("/projects/{proj_id}/discussions", app.CreateDiscussion).Methods("POST")
+	app.router.HandleFunc("/projects/{proj_id}/discussions/{disc_num}", app.GetDiscussion).Methods("GET")
 	//app.router.HandleFunc("/project/{proj_id}/discussion", app.GetDiscussions).Methods("GET")
 }
 
@@ -31,7 +31,7 @@ func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectID := mux.Var(r)["proj_id"]
+	projectID := mux.Vars(r)["proj_id"]
 
 	id, err := app.store.DiscussionProvider.CreateDiscussion(projectID, &newDiscussion)
 	if err != nil {
@@ -64,8 +64,8 @@ func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *App) GetDiscussion(w http.ResponseWriter, r *http.Request) {
-	projectID := mux.Var(r)["proj_id"]
-	discNum := mux.Var(r)["disc_num"]
+	projectID := mux.Vars(r)["proj_id"]
+	discNum := mux.Vars(r)["disc_num"]
 
 	if projectID == "" {
 		log.Printf("App.GetOneUser - empty project id")

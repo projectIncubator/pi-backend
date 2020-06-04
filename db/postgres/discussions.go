@@ -6,7 +6,7 @@ import (
 
 func (p PostgresDBStore) CreateDiscussion(proj_id string, discussion *model.DiscussionIn) (string, error) {
 	sqlStatement :=
-		`INSERT INTO post(proj_id, creator, title, text) VALUES ($1, $2, $3, $4) RETURNING disc_num`
+		`INSERT INTO discussions(proj_id, creator, title, text) VALUES ($1, $2, $3, $4) RETURNING disc_num`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		proj_id,
@@ -19,7 +19,7 @@ func (p PostgresDBStore) CreateDiscussion(proj_id string, discussion *model.Disc
 		return "", err
 	}
 
-	for i, mediaUrl := range discussion.Media {
+	for mediaUrl := range discussion.Media {
 		sqlStatement :=
 			`INSERT INTO discussion_has_media(proj_id, disc_num, media_url) VALUES ($1, $2, $3)`
 

@@ -15,5 +15,5 @@ type DiscussionIn struct {
 	UserID		string `json:"creator"`
 	Title		string `json:"title"`
 	Text		string `json:"text"`
-	Media 		[]string
+	Media 		[]string `json:"media"`
 }
