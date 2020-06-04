@@ -66,9 +66,15 @@ type SearchResults struct {
 	//BestResults []ProjectStub `json:"results"`
 }
 
-type Discussion struct {
-	ID    string   `json:"id"`
-	Posts []string `json:"posts"`
+type DiscussionOut struct {
+	ProjID      string `json:"proj_id"`
+	DiscNum     string
+	UserID		string `json:"creator"`
+	CreatedAt   string `json:"creation_date"`
+	Title		string `json:"title"`
+	Text		string `json:"text"`
+	Closed      bool
+	Media 		[]string
 }
 
 type Post struct {

@@ -9,6 +9,7 @@ type DataStore struct {
 	UserProvider    userProvider
 	ProjectProvider projectProvider
 	ThemeProvider   themeProvider
+	DiscussionProvider discussionProvider
 }
 
 type Closable interface {
@@ -48,4 +49,9 @@ type themeProvider interface {
 	UpdateTheme(theme *model.Theme) (string, error)
 	//GetProjectsWithTheme(themeName string) error
 	DeleteTheme(themeName string) error
+}
+
+type discussionProvider interface {
+	CreateDiscussion(proj_id string, discussion *model.DiscussionIn) (string, error)
+	GetDiscussion(proj_id string, discNum string) (model.DiscussionOut, error)
 }

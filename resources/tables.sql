@@ -34,7 +34,6 @@ CREATE TABLE projects
     discussion_id TEXT,
     Logo          TEXT,
     CoverPhoto    TEXT,
-    /* Media         Text*/
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
@@ -46,12 +45,21 @@ CREATE TABLE themes
     description TEXT
 );
 
-CREATE TABLE discussion
+CREATE TABLE medias
+(
+    url             TEXT PRIMARY KEY,
+    file_name       TEXT,
+    uploader        uuid,
+    date_uploaded   TIMESTAMP DEFAULT current_timestamp,
+    FOREIGN KEY (uploader) REFERENCES users(id)
+);
+
+CREATE TABLE discussions
 (
     proj_id    uuid,
     disc_num   SERIAL,
     creator    uuid NOT NULL,
-    creation_date DATE,
+    creation_date TIMESTAMP DEFAULT current_timestamp,
     title      TEXT,
     text       TEXT,
     closed     BOOLEAN DEFAULT FALSE,
@@ -60,25 +68,50 @@ CREATE TABLE discussion
     PRIMARY KEY (proj_id, disc_num)
 );
 
-CREATE TABLE post
+CREATE TABLE posts
 (
     proj_id     uuid,
     disc_num    INTEGER,
     post_num    SERIAL,
     creator     uuid NOT NULL,
-    creation_date DATE,
+    creation_date TIMESTAMP DEFAULT current_timestamp,
     text        TEXT,
     pinned      BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (proj_id)  REFERENCES projects(id),
-    FOREIGN KEY (disc_num) REFERENCES discussion(disc_num),
+    FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
     FOREIGN KEY (creator)  REFERENCES users(id),
     PRIMARY KEY (proj_id, disc_num, post_num)
 );
 
-CREATE TABLE reaction
+CREATE TABLE discussion_has_media
 (
-    reaction_type TEXT PRIMARY KEY,
-    reaction_icon TEXT NOT NULL
+    proj_id    uuid,
+    disc_num   INTEGER,
+    media_url  TEXT,
+    FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
+    FOREIGN KEY (media_url) REFERENCES medias(url),
+    PRIMARY KEY (proj_id, disc_num, media_url)
+);
+
+CREATE TABLE post_has_media
+(
+    proj_id    uuid,
+    disc_num   INTEGER,
+    post_num   INTEGER,
+    media_url  TEXT,
+    FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
+    FOREIGN KEY (media_url) REFERENCES medias(url),
+    PRIMARY KEY (proj_id, disc_num, media_url)
+);
+
+CREATE TABLE user_react_post
+(
+    user_id     uuid,
+    proj_id     uuid,
+    disc_num    INTEGER,
+    post_num    INTEGER,
+    reaction    TEXT NOT NULL,
+    FOREIGN KEY (proj_id, disc_num, post_num) REFERENCES posts(proj_id, disc_num, post_num),
+    PRIMARY KEY (user_id, proj_id, disc_num, post_num)
 );
 
 CREATE TABLE follows
@@ -90,14 +123,7 @@ CREATE TABLE follows
     PRIMARY KEY (follower_id,followed_id)
 );
 
-CREATE TABLE user_react_post
-(
-    user_id     uuid,
-    proj_id     uuid,
-    disc_num    INTEGER,
-    post_num    INTEGER,
 
-);
 
 CREATE TABLE contributing
 (
