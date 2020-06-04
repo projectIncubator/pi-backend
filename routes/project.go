@@ -90,7 +90,7 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(project.ID) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(project.ID) // <- Sending the projectID back
 }
 
 func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {

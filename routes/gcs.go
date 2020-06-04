@@ -66,10 +66,13 @@ func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 
 	client, _ := storage.NewClient(ctx)
 	object := mux.Vars(r)["objectName"]
-	//TODO check if the file exists if it is valid object name
 
 	o := client.Bucket(bucketName).Object(object)
 	if err := o.Delete(ctx); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		log.Println(err)
+		return
+	} else {
 		return
 	}
 }
