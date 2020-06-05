@@ -17,7 +17,6 @@ type User struct {
 type UserProfile struct {
 	User
 	Email            string        `json:"email"`
-	Password         string        `json:"password"`
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
 	Bio              string        `json:"bio"`

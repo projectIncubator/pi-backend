@@ -9,11 +9,11 @@ DROP TABLE IF EXISTS interested;
 CREATE TABLE users
 (
     id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id_token        TEXT NOT NULL UNIQUE,
     first_name      TEXT NOT NULL,
     last_name       TEXT NOT NULL,
     email           TEXT NOT NULL UNIQUE,
     image           TEXT,
-    password        TEXT NOT NULL,
     profile_id      uuid UNIQUE      DEFAULT uuid_generate_v4(),
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE

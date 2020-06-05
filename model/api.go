@@ -10,3 +10,8 @@ type UserProject struct {
 	UserID string
 	ProjectID string
 }
+
+type NewUserProfile struct {
+	UserProfile
+	IDToken string       `json:"id_token"`
+}
