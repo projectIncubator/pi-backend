@@ -32,7 +32,7 @@ func (app *App) RegisterUserRoutes() {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.UserProfile
+	var newUser model.NewUserProfile
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	// TODO: Validate if the user already exist by checking the email ... here or on the side of postgres?
 	if err != nil {

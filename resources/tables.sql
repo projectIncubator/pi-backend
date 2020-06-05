@@ -1,11 +1,19 @@
 create extension "uuid-ossp" if not exists;
 
 -- 1. Add your table to drop if exists
-DROP TABLE IF EXISTS users;
+
+DROP TABLE IF EXISTS themes;
+DROP TABLE IF EXISTS medias;
+DROP TABLE IF EXISTS discussion_has_media;
+DROP TABLE IF EXISTS post_has_media;
+DROP TABLE IF EXISTS user_react_post;
+DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS follows;
 DROP TABLE IF EXISTS contributing;
+DROP TABLE IF EXISTS discussions;
 DROP TABLE IF EXISTS interested;
+DROP TABLE IF EXISTS users;
 
 -- 2. Create your table
 CREATE TABLE users
@@ -166,13 +174,13 @@ CREATE TABLE user_interested_theme
 
 -- 3. Give a few examples to be added into your table
 -- Examples User
-INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
+INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
 VALUES ('Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
+INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
 VALUES ('John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_1', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
+INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
 VALUES ('Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_2', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, password, profile_id, deactivated, banned)
+INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
 VALUES ('Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', 'test', FALSE, FALSE);
 -- Examples Projects
 -- Examples Follows
