@@ -3,8 +3,11 @@ package routes
 import (
 	"cloud.google.com/go/storage"
 	"context"
+	"encoding/json"
 	"github.com/gorilla/mux"
+	"go-api/db/cloud"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +16,7 @@ import (
 
 func (app *App) RegisterGoogleCloudRoutes() {
 	app.router.HandleFunc("/bucket/upload", app.AddObject).Methods("PUT")
-	app.router.HandleFunc("/bucket/delete/{objectName}", app.DeleteObject).Methods("DELETE")
+	app.router.HandleFunc("/projects/{project_id}/delete/{filename}", app.DeleteObject).Methods("DELETE")
 
 }
 
@@ -58,21 +61,38 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
-	bucketName := os.Getenv("BUCKET_NAME")
-	ctx := context.Background()
+	// TODO validate that if the user is the admin of the project project.photos/project.logo
+	type UserToken struct {
+		ID        string `json:"id"`
+	}
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-
-	client, _ := storage.NewClient(ctx)
-	object := mux.Vars(r)["objectName"]
-
-	o := client.Bucket(bucketName).Object(object)
-	if err := o.Delete(ctx); err != nil {
+	var userTk UserToken
+	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body (an userID for now)
+	if err != nil {
+		log.Printf("App.DeleteObject - error reading request body %v", err)
 		w.WriteHeader(http.StatusBadRequest)
-		log.Println(err)
 		return
-	} else {
+	}
+
+	err = json.Unmarshal(reqBody, &userTk)
+	if err != nil {
+		log.Printf("App.DeleteObject - error unmarshaling request body %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	userID :=userTk.ID
+	projectID := mux.Vars(r)["project_id"]
+	//Call a function to check if the user is an admin if the user is an admin
+	isAdmin :=app.store.ProjectProvider.CheckAdmin(projectID, userID)
+	if !isAdmin {
+		log.Printf("App.DeleteObject - not an admin, do not have permission to delete %v", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	fileName := mux.Vars(r)["filename"]
+	err = cloud.GCSDelete(fileName)
+	if err != nil {
+		log.Printf("App.DeleteObject - internal error, can't delete %v", err)
 		return
 	}
 }

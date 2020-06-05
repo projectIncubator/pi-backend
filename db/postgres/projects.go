@@ -158,7 +158,7 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 }
 
 func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
-	//Make sure the user is not changing the only admin
+	//Make sure the user is not changing the only admin to non-admin
 	_sqlStatement := `SELECT COUNT(*) FROM contributing WHERE is_admin = true;`
 	var _count int
 	_err := p.database.QueryRow(_sqlStatement).Scan(&_count)
@@ -228,4 +228,32 @@ func (p PostgresDBStore) RemoveTheme(themeName string, projectID string) error {
 		return err
 	}
 	return nil
+}
+
+func (p PostgresDBStore) CheckAdmin(projectID string, userID string) bool {
+	type _UserID struct {
+		ID        string `json:"id"`
+	}
+	var userTK _UserID
+	userTK.ID = ""
+	sqlStatement := `SELECT user_id FROM contributing WHERE project_id = $1 AND user_id = $2 AND is_admin = true`
+
+	row := p.database.QueryRow(
+		sqlStatement,
+		projectID,
+		userID,
+		)
+	err := row.Scan(
+		&userTK.ID,
+	)
+	if err != nil {
+		return false
+	}
+	if userTK.ID == "" {
+		return false
+	} else {
+		return true
+	}
+
+
 }

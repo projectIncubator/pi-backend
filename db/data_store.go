@@ -40,6 +40,7 @@ type projectProvider interface {
 	ChangeAdmin(projectID string, userID string) error
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
+	CheckAdmin(projectID string, userID string) bool
 }
 
 type themeProvider interface {
