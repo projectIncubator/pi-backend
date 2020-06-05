@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func (p PostgresDBStore) CreateUser(user *model.NewUserProfile) (string, error) {
+func (p PostgresDBStore) CreateUser(user *model.IDUserProfile) (string, error) {
 	sqlStatement :=
 		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id string

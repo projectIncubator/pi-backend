@@ -32,7 +32,7 @@ func (app *App) RegisterUserRoutes() {
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.NewUserProfile
+	var newUser model.IDUserProfile
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	// TODO: Validate if the user already exist by checking the email ... here or on the side of postgres?
 	if err != nil {
@@ -97,7 +97,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Input - POST JSON
 	// Validation
 	// TODO
-	var updatedUser model.UserProfile
+	var updatedUser model.IDUserProfile
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateUser - could not read r.Body with ioutil")
