@@ -54,7 +54,7 @@ func (p PostgresDBStore) GetDiscussion(proj_id string, discNum string) (model.Di
 	if err != nil {
 		return discussion, err
 	}
-	//Fill in members array
+
 	sqlStatement = `SELECT media_url FROM discussion_has_media 
 							WHERE proj_id = $1 AND disc_num=$2;`
 	rows, err := p.database.Query(sqlStatement, proj_id, discNum)

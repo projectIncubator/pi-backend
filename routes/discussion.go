@@ -13,7 +13,6 @@ import (
 func (app *App) RegisterDiscussionRoutes() {
 	app.router.HandleFunc("/projects/{proj_id}/discussions", app.CreateDiscussion).Methods("POST")
 	app.router.HandleFunc("/projects/{proj_id}/discussions/{disc_num}", app.GetDiscussion).Methods("GET")
-	//app.router.HandleFunc("/project/{proj_id}/discussion", app.GetDiscussions).Methods("GET")
 }
 
 func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
@@ -44,24 +43,6 @@ func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(newDiscussionNum)
 	return
 }
-
-//func (app *App) GetDiscussions(w http.ResponseWriter, r *http.Request) {
-//	projectID := mux.Var(r)["proj_id"]
-//
-//	if projectID == "" {
-//		log.Printf("App.GetOneUser - empty project id")
-//		w.WriteHeader(http.StatusBadRequest)
-//		return
-//	}
-//	project, err := app.store.DiscussionProvider.GetDiscussions(projectID)
-//	if err != nil {
-//		w.WriteHeader(http.StatusNotFound)
-//		return
-//	}
-//	w.WriteHeader(http.StatusOK)
-//	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
-//}
-
 
 func (app *App) GetDiscussion(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
