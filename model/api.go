@@ -13,5 +13,12 @@ type UserProject struct {
 
 type NewUserProfile struct {
 	UserProfile
-	IDToken string       `json:"id_token"`
+	IDToken string `json:"id_token"`
+}
+
+type DiscussionIn struct {
+	UserID		string `json:"creator"`
+	Title		string `json:"title"`
+	Text		string `json:"text"`
+	Media 		[]string `json:"media"`
 }
