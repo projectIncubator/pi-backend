@@ -2,6 +2,8 @@ create extension "uuid-ossp" if not exists;
 
 -- 1. Add your table to drop if exists
 
+DROP TABLE IF EXISTS project_has_theme;
+DROP TABLE IF EXISTS user_interested_theme;
 DROP TABLE IF EXISTS themes;
 DROP TABLE IF EXISTS medias;
 DROP TABLE IF EXISTS discussion_has_media;
