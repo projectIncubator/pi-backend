@@ -49,8 +49,14 @@ type Project struct {
 	Discussion []DiscussionOut  `json:"discussion_id"`
 	Admins     []User    		`json:"admins"`
 	CoverPhoto string   		`json:"coverphoto"`
+	SideBar	   []SideBarModule  `json: "sidebar"`
 	//	Media       []string  `json:"media"`
 	//	Modules     []ProjectModule `json:"projectModules"`
+}
+
+type SideBarModule struct {
+	Type        string `json:"type"`
+	Content 	string `json:"content"`
 }
 
 type Theme struct {

@@ -97,28 +97,6 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	//Fill in members array
-	/*
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
-							FROM users, contributing
-							WHERE users.id = contributing.user_id AND contributing.project_id=$1;`
-	rows, err := p.database.Query(sqlStatement, id)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		var user model.User
-		if err := rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Image,
-			&user.ProfileID,
-		); err != nil {
-			return nil, err
-		}
-		project.Members = append(project.Members, user)
-	}*/
 
 	//Fill in the admins array
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
@@ -141,6 +119,60 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		}
 		project.Admins = append(project.Admins, user)
 	}
+	
+	// Fill in the themes array
+	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
+						FROM themes,project_has_theme
+						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
+	rows, err = p.database.Query(sqlStatement, id)
+	for rows.Next() {
+		var theme model.Theme
+		if err = rows.Scan(
+			&theme.Name,
+			&theme.Colour,
+			&theme.Logo,
+			&theme.Description,
+		); err!= nil {
+			return nil, err
+		}
+		project.Themes = append(project.Themes, theme)
+	}
+
+	// Fill in the sidebar array
+	sqlStatement = `SELECT sidebar.type, sidebar.content
+						FROM sidebar,project_has_sidebar
+						WHERE sidebar.type = project_has_sidebar.sidebar_type AND project_has_sidebar.project_id = $1;`
+	rows, err = p.database.Query(sqlStatement, id)
+	for rows.Next() {
+		var sidebar model.SideBarModule
+		if err = rows.Scan(
+			&sidebar.Type,
+			&sidebar.Content,
+		); err!= nil {
+			return nil, err
+		}
+		project.SideBar = append(project.SideBar, sidebar)
+	}
+
+	// Member Count
+	sqlStatement = `SELECT COUNT(*) from contributing where project_id = $1`
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan (
+		&project.MemberCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+	// Interested Count
+	sqlStatement = `SELECT COUNT(*) from interested where project_id = $1`
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan (
+		&project.InterestedCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 
 	return &project, nil
 }
