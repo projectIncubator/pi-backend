@@ -31,24 +31,24 @@ type UserProfile struct {
 // TODO: Make project state enum not string
 
 type ProjectStub struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	State  string  `json:"state"`
-	Logo   string  `json:"logo"`
-	Themes []Theme `json:"themes"`
+	ID    			string  `json:"id"`
+	Title 			string  `json:"title"`
+	State 			string  `json:"state"`
+	Logo  			string  `json:"logo"`
+	Themes 			[]Theme `json:"themes"`
+	MemberCount		int `json:"member_count"`
+	InterestedCount int `json:"interested_count" `
 }
 
 type Project struct {
 	ProjectStub
-	//	Tags        []string  `json:"tags"`
-	Creator    string    `json:"user_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
-	OneLiner   string    `json:"oneliner"`
-	Discussion string    `json:"discussion_id"`
-	Members    []User    `json:"members"`
-	Admins     []User    `json:"admins"`
-	CoverPhoto string    `json:"coverphoto"`
+	Creator    string    		`json:"user_id"`
+	StartDate  time.Time 		`json:"start_date"`
+	EndDate    time.Time 		`json:"end_date"`
+	OneLiner   string    		`json:"oneliner"`
+	Discussion []DiscussionOut  `json:"discussion_id"`
+	Admins     []User    		`json:"admins"`
+	CoverPhoto string   		`json:"coverphoto"`
 	//	Media       []string  `json:"media"`
 	//	Modules     []ProjectModule `json:"projectModules"`
 }

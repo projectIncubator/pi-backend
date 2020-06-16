@@ -24,6 +24,60 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	}
 	return id, nil
 }
+func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
+	sqlStatement := `SELECT id, title, state, logo FROM projects WHERE id=$1;`
+	var projectStub model.ProjectStub
+	row := p.database.QueryRow(sqlStatement, id)
+	err := row.Scan(
+		&projectStub.ID,
+		&projectStub.Title,
+		&projectStub.State,
+		&projectStub.Logo,
+		)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fill in the themes array
+	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
+						FROM themes,project_has_theme
+						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
+	rows, err := p.database.Query(sqlStatement, id)
+	for rows.Next() {
+		var theme model.Theme
+		if err = rows.Scan(
+			&theme.Name,
+			&theme.Colour,
+			&theme.Logo,
+			&theme.Description,
+			); err!= nil {
+			return nil, err
+		}
+		projectStub.Themes = append(projectStub.Themes, theme)
+	}
+
+	// Member Count
+	sqlStatement = `SELECT COUNT(*) from contributing where project_id = $1`
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan (
+		&projectStub.MemberCount,
+		)
+	if err != nil {
+		return nil, err
+	}
+	// Interested Count
+	sqlStatement = `SELECT COUNT(*) from interested where project_id = $1`
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan (
+		&projectStub.InterestedCount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &projectStub, nil
+}
+
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	sqlStatement := `SELECT id, title, state, user_id, start_date, end_date, oneliner, discussion_id, logo, coverphoto FROM projects WHERE id=$1;`
 	var project model.Project
@@ -44,6 +98,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		return nil, err
 	}
 	//Fill in members array
+	/*
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 							FROM users, contributing
 							WHERE users.id = contributing.user_id AND contributing.project_id=$1;`
@@ -63,13 +118,13 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			return nil, err
 		}
 		project.Members = append(project.Members, user)
-	}
+	}*/
 
 	//Fill in the admins array
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 							FROM users, contributing
 							WHERE users.id = contributing.user_id AND contributing.project_id=$1 AND contributing.is_admin = true;`
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
 	}

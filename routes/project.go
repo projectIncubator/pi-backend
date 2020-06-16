@@ -12,6 +12,7 @@ import (
 func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects", app.CreateProject).Methods("POST")
 	app.router.HandleFunc("/projects/{id}", app.GetProject).Methods("GET")
+	app.router.HandleFunc("/projectStub/{id}", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects", app.UpdateProject).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
@@ -49,6 +50,22 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(newProject)
 	return
+}
+
+func (app *App) GetProjectStub(w http.ResponseWriter, r *http.Request) {
+	projectID := mux.Vars(r)["id"]
+	if projectID == "" {
+		log.Printf("App.GetOneUser - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	project, err := app.store.ProjectProvider.GetProjectStub(projectID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
 func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
