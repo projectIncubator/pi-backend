@@ -119,7 +119,27 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		}
 		project.Admins = append(project.Admins, user)
 	}
-	
+	// Fill in the discussion array
+	sqlStatement = `SELECT proj_id, disc_num, creator, creation_date, title, text, closed 
+						FROM discussions
+						WHERE proj_id = $1`
+	rows, err = p.database.Query(sqlStatement, id)
+	for rows.Next() {
+		var discussion model.DiscussionOut
+		if err = rows.Scan(
+			&discussion.ProjID,
+			&discussion.DiscNum,
+			&discussion.UserID,
+			&discussion.CreatedAt,
+			&discussion.Title,
+			&discussion.Text,
+			&discussion.Closed,
+		); err!= nil {
+			return nil, err
+		}
+		project.Discussion = append(project.Discussion, discussion)
+	}
+
 	// Fill in the themes array
 	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
 						FROM themes,project_has_theme
