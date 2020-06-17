@@ -16,6 +16,11 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects", app.UpdateProject).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.CreateProjPage).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.UpdateProjPage).Methods("PATCH")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.GetProjPage).Methods("GET")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.DeleteProjPage).Methods("DELETE")
+
 	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.AddTheme).Methods("POST")
 	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.RemoveTheme).Methods("DELETE")
 
@@ -23,6 +28,8 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
 
 }
+
+
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var newProject model.Project
@@ -67,7 +74,7 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
-func (app *App) GetProjMembers(w http.ResponseWrite, r *http.Request) {
+func (app *App) GetProjMembers(w http.ResponseWriter, r *http.Request) {
 	var members []model.User
 	projectID := mux.Vars(r)["id"]
 
@@ -128,6 +135,26 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) CreateProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
+}
+
+func (app *App) GetProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
+}
+
+func (app *App) UpdateProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
+}
+
+func (app *App) DeleteProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
 }
 
 func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {

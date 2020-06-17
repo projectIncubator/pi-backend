@@ -17,6 +17,9 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE")
 
+	app.router.HandleFunc("/users/{id}/followers", app.GetUserFollowers).Methods("GET")
+
+	app.router.HandleFunc("/users/{id}/follows", app.GetUserFollows).Methods("GET")
 	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.FollowUser).Methods("POST")
 	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.UnfollowUser).Methods("DELETE")
 
@@ -28,7 +31,6 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.JoinProject).Methods("POST")
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
-
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +140,40 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (app *App) GetUserFollowers(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	followers, err := app.store.UserProvider.GetUserFollowers(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+
+func (app *App) GetUserFollows(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	followers, err := app.store.UserProvider.GetUserFollows(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
 }
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {

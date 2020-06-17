@@ -73,64 +73,32 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//People the user is following
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+	sqlStatement = `SELECT COUNT(*)
 						FROM users, follows
 						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
-	rows, err := p.database.Query(sqlStatement, id)
-
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan(&userProfile.FollowingCount)
 	if err != nil {
 		return nil, err
 	}
 
-	for rows.Next() {
-		var user model.User
-
-		if err := rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Image,
-			&user.ProfileID,
-		); err != nil {
-			log.Fatal(err)
-		}
-
-		userProfile.Following = append(userProfile.Following, user)
-	}
-	log.Println("finish the first part")
 	//  followers of the user
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+	sqlStatement = `SELECT COUNT(*)
 						FROM users, follows
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
-	rows, err = p.database.Query(sqlStatement, id)
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan(&userProfile.FollowersCount)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("before second loop")
-	for rows.Next() {
-		var user model.User
 
-		if err := rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Image,
-			&user.ProfileID,
-		); err != nil {
-			log.Fatal(err)
-		}
-
-		userProfile.Followers = append(userProfile.Followers, user)
-	}
-	log.Println("finish the second part")
-	//Fill in the interested table
 	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
 						FROM projects, intrested
 						WHERE intrested.user_id = $1 AND intrested.project_id=projects.id;`
 
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, err := p.database.Query(sqlStatement, id)
 	log.Println(err)
 	if err != nil {
 		return nil, err
@@ -242,6 +210,62 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 		return CreateError
 	}
 	return nil
+}
+
+func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
+	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+						FROM users, follows
+						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
+
+	var followers []model.User
+    rows, err := p.database.Query(sqlStatement, id)
+    if err != nil {
+        return nil, err
+    }
+    for rows.Next() {
+        var user model.User
+
+        if err := rows.Scan(
+            &user.ID,
+            &user.FirstName,
+            &user.LastName,
+            &user.Image,
+            &user.ProfileID,
+        ); err != nil {
+            return nil, err
+        }
+
+        followers = append(followers, user)
+    }
+    return followers, nil
+}
+
+func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
+	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+						FROM users, follows
+						WHERE users.id = follows.follower_id AND user.id=$1;`
+
+	var follows []model.User
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var user model.User
+
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			return nil, err
+		}
+
+		follows = append(follows, user)
+	}
+	return follows, nil
 }
 
 func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {

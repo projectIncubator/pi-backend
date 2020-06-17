@@ -21,8 +21,8 @@ type UserProfile struct {
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
 	Bio              string        `json:"bio"`
-	Following        []User        `json:"following"`    //TODO make count
-	Followers        []User        `json:"followers"` 	 //TODO make count
+	FollowingCount   int           `json:"following_count"`
+	FollowersCount   int           `json:"followers_count"`
 	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
 	Contributing     []ProjectStub `json:"contributing"` // ^
 	Created          []ProjectStub `json:"created"`      // ^
@@ -44,11 +44,12 @@ type ProjectStub struct {
 type Project struct {
 	ProjectStub
 	//	Tags        []string  `json:"tags"`
-	Creator    User    `json:"user_id"`
+	Creator    string    `json:"user_id"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
 	OneLiner   string    `json:"oneliner"`
-	Discussion []DiscussionOut    `json:"discussion_id"`
+	Discussion string    `json:"discussion_id"`
+	Members    []User    `json:"members"`
 	Admins     []User    `json:"admins"`
 	CoverPhoto string    `json:"coverphoto"`
 	//	Media       []string  `json:"media"`
