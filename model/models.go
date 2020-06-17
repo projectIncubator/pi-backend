@@ -21,8 +21,8 @@ type UserProfile struct {
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
 	Bio              string        `json:"bio"`
-	Following        []User        `json:"following"`
-	Followers        []User        `json:"followers"`
+	Following        []User        `json:"following"`    //TODO make count
+	Followers        []User        `json:"followers"` 	 //TODO make count
 	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
 	Contributing     []ProjectStub `json:"contributing"` // ^
 	Created          []ProjectStub `json:"created"`      // ^
@@ -37,17 +37,18 @@ type ProjectStub struct {
 	State  string  `json:"state"`
 	Logo   string  `json:"logo"`
 	Themes []Theme `json:"themes"`
+	MemberCount int `json:"member_count"`
+	InterestedCount int `json:"interested_count"`
 }
 
 type Project struct {
 	ProjectStub
 	//	Tags        []string  `json:"tags"`
-	Creator    string    `json:"user_id"`
+	Creator    User    `json:"user_id"`
 	StartDate  time.Time `json:"start_date"`
 	EndDate    time.Time `json:"end_date"`
 	OneLiner   string    `json:"oneliner"`
-	Discussion string    `json:"discussion_id"`
-	Members    []User    `json:"members"`
+	Discussion []DiscussionOut    `json:"discussion_id"`
 	Admins     []User    `json:"admins"`
 	CoverPhoto string    `json:"coverphoto"`
 	//	Media       []string  `json:"media"`
@@ -56,7 +57,7 @@ type Project struct {
 
 type Theme struct {
 	Name        string `json:"name"`
-	Colour      string `json:"colour"`
+	Colour      string `json:"colour"` //TODO: remove
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 }

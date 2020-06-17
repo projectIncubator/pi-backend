@@ -41,6 +41,7 @@ type projectProvider interface {
 	ChangeAdmin(projectID string, userID string) error
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
+	GetProjMembers(id string) ([]model.User, error)
 }
 
 type themeProvider interface {
