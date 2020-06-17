@@ -11,6 +11,11 @@ type UserProject struct {
 	ProjectID string
 }
 
+type IDUserProfile struct {
+	UserProfile
+	IDToken string `json:"id_token"`
+}
+
 type DiscussionIn struct {
 	UserID		string `json:"creator"`
 	Title		string `json:"title"`

@@ -5,28 +5,15 @@ import (
 	"log"
 )
 
-//CREATE TABLE users
-//(
-//id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-//first_name      TEXT NOT NULL,
-//last_name       TEXT NOT NULL,
-//email           TEXT DEFAULT '' UNIQUE,
-//image           TEXT,
-//password        TEXT,
-//profile_id      TEXT UNIQUE,
-//deactivated     BOOLEAN DEFAULT FALSE,
-//banned          BOOLEAN DEFAULT FALSE
-//);
-
-func (p PostgresDBStore) CreateUser(user *model.UserProfile) (string, error) {
+func (p PostgresDBStore) CreateUser(user *model.IDUserProfile) (string, error) {
 	sqlStatement :=
-		`INSERT INTO users(first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING id`
+		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
+		user.IDToken,
 		user.FirstName,
 		user.LastName,
 		user.Email,
-		user.Password,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -54,7 +41,7 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 }
 
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
-	sqlStatement := `SELECT * FROM users WHERE id=$1;`
+	sqlStatement := `SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
 	var userProfile model.UserProfile
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -63,7 +50,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		&userProfile.LastName,
 		&userProfile.Email,
 		&userProfile.Image,
-		&userProfile.Password,
 		&userProfile.ProfileID,
 		&userProfile.Deactivated,
 		&userProfile.Banned,
@@ -98,7 +84,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
 		userProfile.Following = append(userProfile.Following, user)
 	}
-	log.Println("finish the first part")
 	//  followers of the user
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
 						FROM users, follows
@@ -108,7 +93,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("before second loop")
 	for rows.Next() {
 		var user model.User
 
@@ -124,14 +108,12 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
 		userProfile.Followers = append(userProfile.Followers, user)
 	}
-	log.Println("finish the second part")
 	//Fill in the interested table
 	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
 						FROM projects, intrested
 						WHERE intrested.user_id = $1 AND intrested.project_id=projects.id;`
 
 	rows, err = p.database.Query(sqlStatement, id)
-	log.Println(err)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +183,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, password = $6,/* profile_id = $7,*/ deactivated = $7, banned = $8
+				SET first_name = $2, last_name = $3, email = $4, image = $5,/* profile_id = $7,*/ deactivated = $6, banned = $7
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -211,7 +193,6 @@ func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile
 		user.LastName,
 		user.Email,
 		user.Image,
-		user.Password,
 		//	user.ProfileID,
 		user.Deactivated,
 		user.Banned,
