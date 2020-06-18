@@ -20,8 +20,8 @@ type UserProfile struct {
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
 	Bio              string        `json:"bio"`
-	Following        []User        `json:"following"`
-	Followers        []User        `json:"followers"`
+	FollowingCount   int           `json:"following_count"`
+	FollowersCount   int           `json:"followers_count"`
 	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
 	Contributing     []ProjectStub `json:"contributing"` // ^
 	Created          []ProjectStub `json:"created"`      // ^
@@ -61,7 +61,7 @@ type SideBarModule struct {
 
 type Theme struct {
 	Name        string `json:"name"`
-	Colour      string `json:"colour"`
+	Colour      string `json:"colour"` //TODO: remove
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 }

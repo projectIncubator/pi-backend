@@ -4,6 +4,31 @@ import (
 	"go-api/model"
 )
 
+func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
+	var members []model.User
+	sqlStatement :=
+		`SELECT u.id, u.first_name, u.last_name, u.image, u.profile_id
+			FROM u users, c contributing
+			WHERE c.project_id = $1 AND u.id = c.user_id`
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var user model.User
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			return nil, err
+		}
+		members = append(members, user)
+	}
+	return members, nil
+}
 func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	sqlStatement :=
 		`INSERT INTO projects(title, state, user_id, start_date, end_date, oneliner, discussion_id, logo, coverphoto ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
