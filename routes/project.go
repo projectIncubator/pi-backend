@@ -84,6 +84,7 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	}
 	project, err := app.store.ProjectProvider.GetProject(projectID)
 	if err != nil {
+		log.Printf("App.GetProject - error getting the project %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -122,7 +123,7 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(reqBody, &updatedProject)
 	if err != nil {
-		log.Printf("App.UpdateProject - was unable to unmarshal changes")
+		log.Printf("App.UpdateProject - can't unmarshal changes %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

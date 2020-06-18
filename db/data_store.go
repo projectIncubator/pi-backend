@@ -37,7 +37,7 @@ type userProvider interface {
 type projectProvider interface {
 	CreateProject(project *model.Project) (string, error)
 	GetProject(id string) (*model.Project, error)
-	GetProjectStub(id string) (*model.Project, error)
+	GetProjectStub(id string) (*model.ProjectStub, error)
 	UpdateProject(project *model.Project) (*model.Project, error)
 	RemoveProject(id string) error
 	RemoveMember(projectID string, userID string) error
