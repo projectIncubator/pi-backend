@@ -5,16 +5,16 @@ create extension "uuid-ossp" if not exists;
 DROP TABLE IF EXISTS project_has_theme;
 DROP TABLE IF EXISTS user_interested_theme;
 DROP TABLE IF EXISTS themes;
-DROP TABLE IF EXISTS medias;
 DROP TABLE IF EXISTS discussion_has_media;
 DROP TABLE IF EXISTS post_has_media;
 DROP TABLE IF EXISTS user_react_post;
+DROP TABLE IF EXISTS medias;
 DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS discussions;
+DROP TABLE IF EXISTS contributing;
+DROP TABLE IF EXISTS interested;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS follows;
-DROP TABLE IF EXISTS contributing;
-DROP TABLE IF EXISTS discussions;
-DROP TABLE IF EXISTS interested;
 DROP TABLE IF EXISTS users;
 
 -- 2. Create your table
