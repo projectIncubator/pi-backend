@@ -1,4 +1,4 @@
-create extension "uuid-ossp" if not exists;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Add your table to drop if exists
 
@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS discussions;
 DROP TABLE IF EXISTS contributing;
 DROP TABLE IF EXISTS interested;
 DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS sidebar_modules;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS users;
 
