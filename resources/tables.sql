@@ -13,8 +13,8 @@ DROP TABLE IF EXISTS posts;
 DROP TABLE IF EXISTS discussions;
 DROP TABLE IF EXISTS contributing;
 DROP TABLE IF EXISTS interested;
-DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS users;
 
 -- 2. Create your table
@@ -26,7 +26,7 @@ CREATE TABLE users
     last_name       TEXT NOT NULL,
     email           TEXT NOT NULL UNIQUE,
     image           TEXT,
-    profile_id      uuid UNIQUE      DEFAULT uuid_generate_v4(),
+    profile_id      TEXT UNIQUE DEFAULT id,
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
@@ -35,16 +35,15 @@ CREATE TABLE projects
 (
     id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
     title         TEXT NOT NULL,
-    state         TEXT NOT NULL,
+    state         TEXT DEFAULT 'idea',
     /* tags       TEXT,*/
-    user_id       uuid NOT NULL,
-    start_date    TIMESTAMPTZ      NOT NULL,
-    end_date      TIMESTAMPTZ      DEFAULT NULL,
+    creator       uuid NOT NULL,
+    start_date    TIMESTAMP DEFAULT current_timestamp,
+    end_date      TIMESTAMP DEFAULT NULL,
     oneliner      TEXT,
-    discussion_id TEXT,
-    Logo          TEXT,
-    CoverPhoto    TEXT,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    logo          TEXT, /* TODO make logo be media */
+    cover_photo   TEXT, /* TODO make logo be media */
+    FOREIGN KEY (creator) REFERENCES users (id),
 );
 
 CREATE TABLE themes
@@ -176,17 +175,66 @@ CREATE TABLE user_interested_theme
 
 -- 3. Give a few examples to be added into your table
 -- Examples User
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_1', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_2', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', 'test', FALSE, FALSE);
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
+VALUES ('00000', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c', 'Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'purity', FALSE, FALSE);
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
+VALUES ('11111', 'de8ccc40-9372-411d-8497-a0becf01eff0', 'John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'joker', FALSE, FALSE);
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
+VALUES ('10101', '591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'KayYep', FALSE, FALSE);
+INSERT INTO users (id_token, id,  first_name, last_name, email, image, profile_id, deactivated, banned)
+VALUES ('01010', 'c9208c94-3c0f-416e-997d-a4d23cb3016f', 'Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', FALSE, FALSE);
 -- Examples Projects
+INSERT INTO projects (id, title, creator, oneliner)
+VALUES ('6e2f8633-8743-4214-9115-d4e65a76b113', 'COVID vaccine', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c', 'We aim cure COVID.');
+INSERT INTO projects (id, title, creator, oneliner)
+VALUES ('f34130ab-a785-47f1-a6e2-3fae4d4b0d07','Street photography', 'de8ccc40-9372-411d-8497-a0becf01eff0', 'Revealing inequity through art');
+INSERT INTO projects (id, title, creator, oneliner, logo, cover_photo)
+VALUES ('260a1370-c968-490c-a623-d0f6d130990f', 'Pancakes', '591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'Believe that pancakes can fly.');
 -- Examples Follows
+
+/* John follows Alex */
+INSERT INTO follows (follower_id, followed_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c');
+
+/* Kenrick follows Alex */
+INSERT INTO follows (follower_id, followed_id)
+VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c');
+
+
+/* Kenrick follows John */
+INSERT INTO follows (follower_id, followed_id)
+VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'de8ccc40-9372-411d-8497-a0becf01eff0');
+
+/* John follows Kenrick */
+INSERT INTO follows (follower_id, followed_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','591564c5-45e4-43aa-bc5f-c37a50a6e7d8');
+
 -- Examples Contributing
+
+/* John contributes to COVID vaccine */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','6e2f8633-8743-4214-9115-d4e65a76b113');
+
+/* John contributes to Pancakes */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','260a1370-c968-490c-a623-d0f6d130990f');
+
+/* Kenrick contributes to COVID vaccine */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8','6e2f8633-8743-4214-9115-d4e65a76b113');
+
 -- Examples Interested
+
+/* John interested in COVID vaccine */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','6e2f8633-8743-4214-9115-d4e65a76b113');
+
+/* John interested in Pancakes */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','260a1370-c968-490c-a623-d0f6d130990f');
+
+/* Kenrick interested COVID vaccine */
+INSERT INTO contributing (user_id, project_id)
+VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8','6e2f8633-8743-4214-9115-d4e65a76b113');
+
 -- 4. Check that they now exist in the database
-select * from users
