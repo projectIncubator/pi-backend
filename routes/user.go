@@ -99,7 +99,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Input - POST JSON
 	// Validation
 	// TODO
-	var updatedUser model.IDUserProfile
+	var updatedUser model.UserProfile
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateUser - could not read r.Body with ioutil")

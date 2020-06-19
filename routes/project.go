@@ -12,6 +12,7 @@ import (
 func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects", app.CreateProject).Methods("POST")
 	app.router.HandleFunc("/projects/{id}", app.GetProject).Methods("GET")
+	app.router.HandleFunc("/projectStub/{id}", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")
 	app.router.HandleFunc("/projects", app.UpdateProject).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
@@ -57,6 +58,22 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (app *App) GetProjectStub(w http.ResponseWriter, r *http.Request) {
+	projectID := mux.Vars(r)["id"]
+	if projectID == "" {
+		log.Printf("App.GetOneUser - empty project id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	project, err := app.store.ProjectProvider.GetProjectStub(projectID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+}
+
 func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["id"]
 
@@ -67,6 +84,7 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	}
 	project, err := app.store.ProjectProvider.GetProject(projectID)
 	if err != nil {
+		log.Printf("App.GetProject - error getting the project %v", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -105,7 +123,7 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	err = json.Unmarshal(reqBody, &updatedProject)
 	if err != nil {
-		log.Printf("App.UpdateProject - was unable to unmarshal changes")
+		log.Printf("App.UpdateProject - can't unmarshal changes %v", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

@@ -165,6 +165,16 @@ CREATE TABLE project_has_theme
     PRIMARY KEY (project_id, theme_name)
 );
 
+CREATE TABLE sidebar_modules
+(
+    project_id      uuid,
+    index           INTEGER,
+    module_type     TEXT NOT NULL,
+    content         TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, index)
+);
+
 CREATE TABLE user_interested_theme
 (
     user_id     uuid,
@@ -176,14 +186,14 @@ CREATE TABLE user_interested_theme
 
 -- 3. Give a few examples to be added into your table
 -- Examples User
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_1', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'pass', 'some_uuid_later_2', FALSE, FALSE);
-INSERT INTO users (first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', 'test', FALSE, FALSE);
+INSERT INTO users (id_token , first_name, last_name, email, image,  deactivated, banned)
+VALUES ('accessToken1','Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', FALSE, FALSE);
+INSERT INTO users (id_token , first_name, last_name, email, image,  deactivated, banned)
+VALUES ('accessToken2', 'John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', FALSE, FALSE);
+INSERT INTO users (id_token , first_name, last_name, email, image,  deactivated, banned)
+VALUES ('accessToken3', 'Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', FALSE, FALSE);
+INSERT INTO users (id_token , first_name, last_name, email, image,  deactivated, banned)
+VALUES ('accessToken4', 'Test', 'Testing', 'testperson@gmail.com', 'sometest.com', FALSE, FALSE);
 -- Examples Projects
 -- Examples Follows
 -- Examples Contributing

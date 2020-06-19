@@ -80,12 +80,15 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 
+
   //Fill in the interested table
 	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
 						FROM projects, intrested
 						WHERE intrested.user_id = $1 AND intrested.project_id=projects.id;`
 
+
   rows, err := p.database.Query(sqlStatement, id)
+
 	if err != nil {
 		return nil, err
 	}
