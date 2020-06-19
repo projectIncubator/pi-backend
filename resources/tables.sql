@@ -55,12 +55,6 @@ CREATE TABLE themes
     description TEXT
 );
 
-CREATE TABLE sidebar
-(
-    type        TEXT PRIMARY KEY,
-    content     TEXT NOT NULL
-);
-
 CREATE TABLE medias
 (
     url             TEXT PRIMARY KEY,
@@ -171,14 +165,14 @@ CREATE TABLE project_has_theme
     PRIMARY KEY (project_id, theme_name)
 );
 
-CREATE TABLE project_has_sidebar
+CREATE TABLE sidebar_modules
 (
     project_id      uuid,
-    sidebar_type    TEXT,
     index           INTEGER,
+    module_type     TEXT NOT NULL,
+    content         TEXT NOT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-    FOREIGN KEY (sidebar_type) REFERENCES sidebar(type) ON DELETE CASCADE,
-    PRIMARY KEY (project_id, sidebar_type)
+    PRIMARY KEY (project_id, index)
 );
 
 CREATE TABLE user_interested_theme

@@ -104,8 +104,9 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 }
 
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
-	sqlStatement := `SELECT id, title, state, user_id, start_date, end_date, oneliner, logo, coverphoto FROM projects WHERE id=$1;`
 	var project model.Project
+
+	sqlStatement := `SELECT id, title, state, user_id, start_date, end_date, oneliner, logo, coverphoto FROM projects WHERE id=$1;`
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&project.ID,
@@ -183,9 +184,10 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	}
 
 	// Fill in the sidebar array
-	sqlStatement = `SELECT sidebar.type, sidebar.content
-						FROM sidebar,project_has_sidebar
-						WHERE sidebar.type = project_has_sidebar.sidebar_type AND project_has_sidebar.project_id = $1;`
+	sqlStatement = `SELECT module_type, content
+						FROM sidebar_modules
+						WHERE project_id = $1
+						ORDER BY index ASC;`
 	rows, err = p.database.Query(sqlStatement, id)
 	for rows.Next() {
 		var sidebar model.SideBarModule
