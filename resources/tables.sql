@@ -27,7 +27,7 @@ CREATE TABLE users
     last_name       TEXT NOT NULL,
     email           TEXT NOT NULL UNIQUE,
     image           TEXT,
-    profile_id      TEXT UNIQUE DEFAULT id,
+    profile_id      TEXT UNIQUE,
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
@@ -44,7 +44,7 @@ CREATE TABLE projects
     oneliner      TEXT,
     logo          TEXT, /* TODO make logo be media */
     cover_photo   TEXT, /* TODO make logo be media */
-    FOREIGN KEY (creator) REFERENCES users (id),
+    FOREIGN KEY (creator) REFERENCES users (id)
 );
 
 CREATE TABLE themes
@@ -189,7 +189,7 @@ INSERT INTO projects (id, title, creator, oneliner)
 VALUES ('6e2f8633-8743-4214-9115-d4e65a76b113', 'COVID vaccine', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c', 'We aim cure COVID.');
 INSERT INTO projects (id, title, creator, oneliner)
 VALUES ('f34130ab-a785-47f1-a6e2-3fae4d4b0d07','Street photography', 'de8ccc40-9372-411d-8497-a0becf01eff0', 'Revealing inequity through art');
-INSERT INTO projects (id, title, creator, oneliner, logo, cover_photo)
+INSERT INTO projects (id, title, creator, oneliner)
 VALUES ('260a1370-c968-490c-a623-d0f6d130990f', 'Pancakes', '591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'Believe that pancakes can fly.');
 -- Examples Follows
 
@@ -227,15 +227,15 @@ VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8','6e2f8633-8743-4214-9115-d4e65a76
 -- Examples Interested
 
 /* John interested in COVID vaccine */
-INSERT INTO contributing (user_id, project_id)
+INSERT INTO interested (user_id, project_id)
 VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','6e2f8633-8743-4214-9115-d4e65a76b113');
 
 /* John interested in Pancakes */
-INSERT INTO contributing (user_id, project_id)
+INSERT INTO interested (user_id, project_id)
 VALUES ('de8ccc40-9372-411d-8497-a0becf01eff0','260a1370-c968-490c-a623-d0f6d130990f');
 
 /* Kenrick interested COVID vaccine */
-INSERT INTO contributing (user_id, project_id)
+INSERT INTO interested (user_id, project_id)
 VALUES ('591564c5-45e4-43aa-bc5f-c37a50a6e7d8','6e2f8633-8743-4214-9115-d4e65a76b113');
 
 -- 4. Check that they now exist in the database
