@@ -165,6 +165,16 @@ CREATE TABLE project_has_theme
     PRIMARY KEY (project_id, theme_name)
 );
 
+CREATE TABLE sidebar_modules
+(
+    project_id      uuid,
+    index           INTEGER,
+    module_type     TEXT NOT NULL,
+    content         TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, index)
+);
+
 CREATE TABLE user_interested_theme
 (
     user_id     uuid,
