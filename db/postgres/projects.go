@@ -7,9 +7,9 @@ import (
 func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
 	var members []model.User
 	sqlStatement :=
-		`SELECT u.id, u.first_name, u.last_name, u.image, u.profile_id
-			FROM u users, c contributing
-			WHERE c.project_id = $1 AND u.id = c.user_id`
+		`SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+			FROM users, contributing
+			WHERE contributing.project_id = $1 AND users.id = contributing.user_id`
 	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
 }
 func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	sqlStatement :=
-		`INSERT INTO projects(title, state, user_id, start_date, end_date, oneliner, discussion_id, logo, coverphoto ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+		`INSERT INTO projects(title, state, creator, start_date, end_date, oneliner, discussion_id, logo, cover_photo ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		project.Title,
@@ -106,7 +106,7 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	var project model.Project
 
-	sqlStatement := `SELECT id, title, state, user_id, start_date, end_date, oneliner, logo, coverphoto FROM projects WHERE id=$1;`
+	sqlStatement := `SELECT id, title, state, creator, start_date, end_date, oneliner, logo, cover_photo FROM projects WHERE id=$1;`
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&project.ID,
@@ -226,7 +226,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, error) {
 	sqlStatement :=
 		`UPDATE projects
-				SET title = $2, state = $3, user_id = $4, start_date = $5, end_date = $6, oneliner = $7, logo = $8, coverphoto = $9
+				SET title = $2, state = $3, creator = $4, start_date = $5, end_date = $6, oneliner = $7, logo = $8, cover_photo = $9
 				WHERE id = $1
 				RETURNING id;`
 	var _id string

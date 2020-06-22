@@ -12,7 +12,7 @@ import (
 func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects", app.CreateProject).Methods("POST")
 	app.router.HandleFunc("/projects/{id}", app.GetProject).Methods("GET")
-	app.router.HandleFunc("/projectStub/{id}", app.GetProjectStub).Methods("GET")
+	app.router.HandleFunc("/projects/{id}/stub", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")
 	app.router.HandleFunc("/projects", app.UpdateProject).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
@@ -29,8 +29,6 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
 
 }
-
-
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var newProject model.Project
