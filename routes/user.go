@@ -56,8 +56,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	newUser.ID = id
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(newUser)
-	return
+	json.NewEncoder(w).Encode(newUser)
 }
 
 func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -88,6 +87,7 @@ func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	usr, err := app.store.UserProvider.GetUserProfile(userID)
 	if err != nil {
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -152,6 +152,7 @@ func (app *App) GetUserFollowers(w http.ResponseWriter, r *http.Request) {
 	}
 	followers, err := app.store.UserProvider.GetUserFollowers(userID)
 	if err != nil {
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -167,13 +168,14 @@ func (app *App) GetUserFollows(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	followers, err := app.store.UserProvider.GetUserFollows(userID)
+	follows, err := app.store.UserProvider.GetUserFollows(userID)
 	if err != nil {
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+	json.NewEncoder(w).Encode(follows) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
 }
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +190,7 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 	}
 	err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
-		log.Printf("App.FollowUser - error creating user %v", err)
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

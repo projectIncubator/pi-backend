@@ -26,8 +26,8 @@ CREATE TABLE users
     first_name      TEXT NOT NULL,
     last_name       TEXT NOT NULL,
     email           TEXT NOT NULL UNIQUE,
-    image           TEXT,
-    profile_id      TEXT UNIQUE,
+    image           TEXT DEFAULT 'placeholder_url',
+    profile_id      TEXT UNIQUE NOT NULL, /* TODO: set = to id if null*/
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
@@ -41,9 +41,9 @@ CREATE TABLE projects
     creator       uuid NOT NULL,
     start_date    TIMESTAMP DEFAULT current_timestamp,
     end_date      TIMESTAMP DEFAULT NULL,
-    oneliner      TEXT,
-    logo          TEXT, /* TODO make logo be media */
-    cover_photo   TEXT, /* TODO make logo be media */
+    oneliner      TEXT DEFAULT 'insert description here',
+    logo          TEXT DEFAULT 'placeholder_url', /* TODO make logo be media */
+    cover_photo   TEXT DEFAULT 'placeholder_url', /* TODO make logo be media */
     FOREIGN KEY (creator) REFERENCES users (id)
 );
 
@@ -52,14 +52,14 @@ CREATE TABLE themes
     name        TEXT PRIMARY KEY,
     colour      TEXT NOT NULL,
     logo        TEXT NOT NULL,
-    description TEXT
+    description TEXT DEFAULT 'insert description here'
 );
 
 CREATE TABLE medias
 (
     url             TEXT PRIMARY KEY,
-    file_name       TEXT,
-    uploader        uuid,
+    file_name       TEXT, /* TODO: set = to id if null*/
+    uploader        uuid NOT NULL ,
     date_uploaded   TIMESTAMP DEFAULT current_timestamp,
     FOREIGN KEY (uploader) REFERENCES users(id)
 );
@@ -70,8 +70,8 @@ CREATE TABLE discussions
     disc_num   SERIAL,
     creator    uuid NOT NULL,
     creation_date TIMESTAMP DEFAULT current_timestamp,
-    title      TEXT,
-    text       TEXT,
+    title      TEXT NOT NULL,
+    text       TEXT DEFAULT '',
     closed     BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (proj_id) REFERENCES projects(id),
     FOREIGN KEY (creator) REFERENCES users(id),
@@ -85,7 +85,7 @@ CREATE TABLE posts
     post_num    SERIAL,
     creator     uuid NOT NULL,
     creation_date TIMESTAMP DEFAULT current_timestamp,
-    text        TEXT,
+    text        TEXT NOT NULL,
     pinned      BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
     FOREIGN KEY (creator)  REFERENCES users(id),

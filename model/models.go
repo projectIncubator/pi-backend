@@ -1,10 +1,30 @@
 package model
 
 import (
+	"database/sql/driver"
 	"time"
 )
 
 // TODO: Figure out how to store the password securely
+
+type NullTime struct {
+	time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (nt *NullTime) Scan(value interface{}) error {
+	nt.Time, nt.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (nt NullTime) Value() (driver.Value, error) {
+	if !nt.Valid {
+		return nil, nil
+	}
+	return nt.Time, nil
+}
 
 type User struct {
 	ID        string `json:"id"`
@@ -44,7 +64,7 @@ type Project struct {
 	ProjectStub
 	Creator    string    		`json:"user_id"`
 	StartDate  time.Time 		`json:"start_date"`
-	EndDate    time.Time 		`json:"end_date"`
+	EndDate    NullTime 		`json:"end_date"`
 	OneLiner   string    		`json:"oneliner"`
 	Discussion []DiscussionOut  `json:"discussion_id"`
 	Admins     []User    		`json:"admins"`
