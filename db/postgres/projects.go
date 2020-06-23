@@ -25,6 +25,21 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	}
 	return id, nil
 }
+
+func (p PostgresDBStore) CreateProjectMedia(projectID string, mediaURL string) error {
+	sqlStatement :=
+		`INSERT INTO project_has_media(project_id, media) VALUES ($1, $2) RETURNING project_id, media`
+	var returnedID, returnedURL string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		mediaURL,
+	).Scan(returnedID, returnedURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	sqlStatement := `SELECT id, title, state, user_id, start_date, end_date, oneliner, discussion_id, logo, coverphoto FROM projects WHERE id=$1;`
 	var project model.Project
@@ -117,6 +132,46 @@ func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, 
 		return nil, CreateError
 	}
 	return project, nil
+}
+
+func (p PostgresDBStore) UpdateCoverPhoto(projectID string, coverURL string) (string, error) {
+	sqlStatement :=
+		`UPDATE projects
+				SET coverphoto = $2
+				WHERE id = $1
+				RETURNING id;`
+	var _id string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		coverURL,
+	).Scan(&_id)
+	if err != nil {
+		return "", err
+	}
+	if _id != projectID {
+		return "", CreateError
+	}
+	return projectID, nil
+}
+
+func (p PostgresDBStore) UpdateLogo(projectID string, logo string) (string, error) {
+	sqlStatement :=
+		`UPDATE projects
+				SET logo = $2
+				WHERE id = $1
+				RETURNING id;`
+	var _id string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		logo,
+	).Scan(&_id)
+	if err != nil {
+		return "", err
+	}
+	if _id != projectID {
+		return "", CreateError
+	}
+	return projectID, nil
 }
 
 func (p PostgresDBStore) RemoveProject(id string) error {

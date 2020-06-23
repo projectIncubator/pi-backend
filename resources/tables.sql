@@ -7,17 +7,17 @@ DROP TABLE IF EXISTS contributing;
 DROP TABLE IF EXISTS interested;
 -- 2. Create your table
 CREATE TABLE users
-(
-    id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    first_name      TEXT NOT NULL,
-    last_name       TEXT NOT NULL,
-    email           TEXT NOT NULL UNIQUE,
-    image           TEXT,
-    password        TEXT NOT NULL,
-    profile_id      uuid UNIQUE      DEFAULT uuid_generate_v4(),
-    deactivated     BOOLEAN DEFAULT FALSE,
-    banned          BOOLEAN DEFAULT FALSE
-);
+  (
+      id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+      first_name      TEXT NOT NULL,
+      last_name       TEXT NOT NULL,
+      email           TEXT NOT NULL UNIQUE,
+      image           TEXT,
+      password        TEXT NOT NULL,
+      profile_id      uuid UNIQUE      DEFAULT uuid_generate_v4(),
+      deactivated     BOOLEAN DEFAULT FALSE,
+      banned          BOOLEAN DEFAULT FALSE
+  );
 
 CREATE TABLE projects
 (
@@ -34,6 +34,14 @@ CREATE TABLE projects
     CoverPhoto    TEXT,
     /* Media         Text*/
     FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE project_has_media
+(
+    project_id              uuid,
+    media           TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id,media)
 );
 
 CREATE TABLE themes

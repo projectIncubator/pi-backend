@@ -33,8 +33,11 @@ type userProvider interface {
 
 type projectProvider interface {
 	CreateProject(project *model.Project) (string, error)
+	CreateProjectMedia(projectID string, mediaURL string) error
 	GetProject(id string) (*model.Project, error)
 	UpdateProject(project *model.Project) (*model.Project, error)
+	UpdateCoverPhoto(projectID string, coverURL string) (string, error)
+	UpdateLogo(projectID string, logo string) (string, error)
 	RemoveProject(id string) error
 	RemoveMember(projectID string, userID string) error
 	ChangeAdmin(projectID string, userID string) error

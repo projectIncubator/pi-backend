@@ -14,7 +14,7 @@ import (
 
 func (app *App) RegisterGoogleCloudRoutes() {
 
-	app.router.HandleFunc("/project/{project_id}/upload", app.AddObject).Methods("PUT").Queries("destination", "{destination}")
+	app.router.HandleFunc("/project/{project_id}/upload/{destination}", app.AddObject).Methods("PUT")
 
 	app.router.HandleFunc("/projects/{project_id}/delete/{filename}", app.DeleteObject).Methods("DELETE")
 
@@ -23,12 +23,27 @@ func (app *App) RegisterGoogleCloudRoutes() {
 const MaxFileSize = 6 << 20 // 6 MB
 
 func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
+	// Init
+	// todo: change this to os.getenv for baseurl
+	baseUrl := "https://storage.cloud.com/graceful-castle-276900.appspot.com/"
 	// get url info
 	projectID := mux.Vars(r)["project_id"]
-	destination := r.FormValue("destination")
+	destination := mux.Vars(r)["destination"]
 
-	// TODO: Check if projectID empty or valid
-	// TODO: Check if action done by admins --> someone who is allowed
+	//// TODO: Would this be handled in getting the project below? --> Would have to find with projectID anyways so is it worth it?
+	//if !utils.IsValidUUID(projectID) {
+	//	log.Println("App.AddObject - projectID is not a valid UUID")
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	return
+	//}
+
+	project, err := app.store.ProjectProvider.GetProject(projectID)
+
+	if project == nil { // Check that the project exists (not storing for some uuid that isnt a real project
+		log.Println("App.AddObject - No existing project with this projectID")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
 	// Read multipart form (image)
 	r.Body = http.MaxBytesReader(w, r.Body, MaxFileSize+512)
@@ -56,13 +71,8 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 
 	name := "projects/"+projectID+"/"+uuid.New().String()+ext
 
-	// TODO: Add filename to Media struct
 	filename := header.Filename
 	log.Println(filename)
-
-	// TODO: If destination == coverphoto - set coverphoto
-	// TODO: If destination == logo - set logo
-	// TODO: If destination == media, append to media
 
 	err = cloud.GCSUploader(name, imageFile)
 	if err != nil {
@@ -71,12 +81,12 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.WriteHeader(http.StatusOK)
 		if destination == "coverphoto" {
-			// TODO: Set Project.Coverphoto as this new url
+			app.store.ProjectProvider.UpdateCoverPhoto(projectID, baseUrl+name)
 		}
 		if destination == "logo" {
-			// TODO: Set Project.Logo as this new url
+			app.store.ProjectProvider.UpdateLogo(projectID, baseUrl+name)
 		}
-		// TODO: Append to Project.media regardless
+		app.store.ProjectProvider.CreateProjectMedia(projectID, baseUrl+name)
 		return
 	}
 }
