@@ -5,28 +5,15 @@ import (
 	"log"
 )
 
-//CREATE TABLE users
-//(
-//id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-//first_name      TEXT NOT NULL,
-//last_name       TEXT NOT NULL,
-//email           TEXT DEFAULT '' UNIQUE,
-//image           TEXT,
-//password        TEXT,
-//profile_id      TEXT UNIQUE,
-//deactivated     BOOLEAN DEFAULT FALSE,
-//banned          BOOLEAN DEFAULT FALSE
-//);
-
-func (p PostgresDBStore) CreateUser(user *model.UserProfile) (string, error) {
+func (p PostgresDBStore) CreateUser(user *model.IDUserProfile) (string, error) {
 	sqlStatement :=
-		`INSERT INTO users(first_name, last_name, email, password) VALUES ($1, $2, $3, $4) RETURNING id`
+		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
+		user.IDToken,
 		user.FirstName,
 		user.LastName,
 		user.Email,
-		user.Password,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -54,7 +41,8 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 }
 
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
-	sqlStatement := `SELECT * FROM users WHERE id=$1;`
+
+	sqlStatement := `SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
 	var userProfile model.UserProfile
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -63,7 +51,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		&userProfile.LastName,
 		&userProfile.Email,
 		&userProfile.Image,
-		&userProfile.Password,
 		&userProfile.ProfileID,
 		&userProfile.Deactivated,
 		&userProfile.Banned,
@@ -73,87 +60,58 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//People the user is following
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+	sqlStatement = `SELECT COUNT(*)
 						FROM users, follows
 						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
-	rows, err := p.database.Query(sqlStatement, id)
-
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan(&userProfile.FollowingCount)
 	if err != nil {
 		return nil, err
 	}
 
-	for rows.Next() {
-		var user model.User
-
-		if err := rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Image,
-			&user.ProfileID,
-		); err != nil {
-			log.Fatal(err)
-		}
-
-		userProfile.Following = append(userProfile.Following, user)
-	}
-	log.Println("finish the first part")
 	//  followers of the user
-	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+	sqlStatement = `SELECT COUNT(*)
 						FROM users, follows
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
-	rows, err = p.database.Query(sqlStatement, id)
+	row = p.database.QueryRow(sqlStatement, id)
+	err = row.Scan(&userProfile.FollowersCount)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("before second loop")
-	for rows.Next() {
-		var user model.User
 
-		if err := rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Image,
-			&user.ProfileID,
-		); err != nil {
-			log.Fatal(err)
-		}
 
-		userProfile.Followers = append(userProfile.Followers, user)
-	}
-	log.Println("finish the second part")
 	//Fill in the interested table
-	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
-						FROM projects, intrested
-						WHERE intrested.user_id = $1 AND intrested.project_id=projects.id;`
+	sqlStatement = `SELECT project_id
+						FROM interested
+						WHERE interested.user_id = $1;`
 
-	rows, err = p.database.Query(sqlStatement, id)
-	log.Println(err)
+	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
-		var proj model.ProjectStub
+		var proj_id string
 
 		if err := rows.Scan(
-			&proj.ID,
-			&proj.Title,
-			&proj.State,
-			&proj.Logo,
+			&proj_id,
 		); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
-		userProfile.Interested = append(userProfile.Interested, proj)
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		userProfile.Interested = append(userProfile.Interested, *proj)
 	}
 
-	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
-						FROM projects, contributing
-						WHERE contributing.user_id = $1 AND contributing.project_id=projects.id;`
+	sqlStatement = `SELECT project_id
+						FROM contributing
+						WHERE contributing.user_id = $1;`
 
 	rows, err = p.database.Query(sqlStatement, id)
 	if err != nil {
@@ -161,37 +119,46 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	}
 
 	for rows.Next() {
-		var proj model.ProjectStub
+		var proj_id string
 
 		if err := rows.Scan(
-			&proj.ID,
-			&proj.Title,
-			&proj.State,
-			&proj.Logo,
+			&proj_id,
 		); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
-		userProfile.Contributing = append(userProfile.Contributing, proj)
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		userProfile.Contributing = append(userProfile.Contributing, *proj)
 	}
 
-	sqlStatement = `SELECT projects.id, projects.title, projects.state, projects.logo
+	sqlStatement = `SELECT id
 						FROM projects
-						WHERE projects.user_id = $1;`
+						WHERE projects.creator = $1;`
+
+	rows, err = p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
 
 	for rows.Next() {
-		var proj model.ProjectStub
+		var proj_id string
 
 		if err := rows.Scan(
-			&proj.ID,
-			&proj.Title,
-			&proj.State,
-			&proj.Logo,
+			&proj_id,
 		); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
-		userProfile.Created = append(userProfile.Created, proj)
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		userProfile.Created = append(userProfile.Created, *proj)
 	}
 
 	return &userProfile, nil
@@ -201,7 +168,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, password = $6,/* profile_id = $7,*/ deactivated = $7, banned = $8
+				SET first_name = $2, last_name = $3, email = $4, image = $5,/* profile_id = $7,*/ deactivated = $6, banned = $7
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -211,7 +178,6 @@ func (p PostgresDBStore) UpdateUser(user *model.UserProfile) (*model.UserProfile
 		user.LastName,
 		user.Email,
 		user.Image,
-		user.Password,
 		//	user.ProfileID,
 		user.Deactivated,
 		user.Banned,
@@ -242,6 +208,62 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 		return CreateError
 	}
 	return nil
+}
+
+func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
+	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+						FROM users, follows
+						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
+
+	var followers []model.User
+    rows, err := p.database.Query(sqlStatement, id)
+    if err != nil {
+        return nil, err
+    }
+    for rows.Next() {
+        var user model.User
+
+        if err := rows.Scan(
+            &user.ID,
+            &user.FirstName,
+            &user.LastName,
+            &user.Image,
+            &user.ProfileID,
+        ); err != nil {
+            return nil, err
+        }
+
+        followers = append(followers, user)
+    }
+    return followers, nil
+}
+
+func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
+	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
+						FROM users, follows
+						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
+
+	var follows []model.User
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var user model.User
+
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			return nil, err
+		}
+
+		follows = append(follows, user)
+	}
+	return follows, nil
 }
 
 func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {

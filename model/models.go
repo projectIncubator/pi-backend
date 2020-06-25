@@ -1,10 +1,30 @@
 package model
 
 import (
+	"database/sql/driver"
 	"time"
 )
 
 // TODO: Figure out how to store the password securely
+
+type NullTime struct {
+	time.Time
+	Valid bool // Valid is true if Time is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (nt *NullTime) Scan(value interface{}) error {
+	nt.Time, nt.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the driver Valuer interface.
+func (nt NullTime) Value() (driver.Value, error) {
+	if !nt.Valid {
+		return nil, nil
+	}
+	return nt.Time, nil
+}
 
 type User struct {
 	ID        string `json:"id"`
@@ -17,12 +37,11 @@ type User struct {
 type UserProfile struct {
 	User
 	Email            string        `json:"email"`
-	Password         string        `json:"password"`
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
 	Bio              string        `json:"bio"`
-	Following        []User        `json:"following"`
-	Followers        []User        `json:"followers"`
+	FollowingCount   int           `json:"following_count"`
+	FollowersCount   int           `json:"followers_count"`
 	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
 	Contributing     []ProjectStub `json:"contributing"` // ^
 	Created          []ProjectStub `json:"created"`      // ^
@@ -32,31 +51,37 @@ type UserProfile struct {
 // TODO: Make project state enum not string
 
 type ProjectStub struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	State  string  `json:"state"`
-	Logo   string  `json:"logo"`
-	Themes []Theme `json:"themes"`
+	ID    			string  `json:"id"`
+	Title 			string  `json:"title"`
+	State 			string  `json:"state"`
+	Logo  			string  `json:"logo"`
+	Themes 			[]Theme `json:"themes"`
+	MemberCount		int `json:"member_count"`
+	InterestedCount int `json:"interested_count" `
 }
 
 type Project struct {
 	ProjectStub
-	//	Tags        []string  `json:"tags"`
-	Creator    string    `json:"user_id"`
-	StartDate  time.Time `json:"start_date"`
-	EndDate    time.Time `json:"end_date"`
-	OneLiner   string    `json:"oneliner"`
-	Discussion string    `json:"discussion_id"`
-	Members    []User    `json:"members"`
-	Admins     []User    `json:"admins"`
-	CoverPhoto string    `json:"coverphoto"`
+	Creator    string    		`json:"user_id"`
+	StartDate  time.Time 		`json:"start_date"`
+	EndDate    NullTime 		`json:"end_date"`
+	OneLiner   string    		`json:"oneliner"`
+	Discussion []DiscussionOut  `json:"discussion_id"`
+	Admins     []User    		`json:"admins"`
+	CoverPhoto string   		`json:"coverphoto"`
+	SideBar	   []SideBarModule  `json: "sidebar"`
 	//	Media       []string  `json:"media"`
 	//	Modules     []ProjectModule `json:"projectModules"`
 }
 
+type SideBarModule struct {
+	Type        string `json:"type"`
+	Content 	string `json:"content"`
+}
+
 type Theme struct {
 	Name        string `json:"name"`
-	Colour      string `json:"colour"`
+	Colour      string `json:"colour"` //TODO: remove
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 }
@@ -66,9 +91,15 @@ type SearchResults struct {
 	//BestResults []ProjectStub `json:"results"`
 }
 
-type Discussion struct {
-	ID    string   `json:"id"`
-	Posts []string `json:"posts"`
+type DiscussionOut struct {
+	ProjID      string `json:"proj_id"`
+	DiscNum     string
+	UserID		string `json:"creator"`
+	CreatedAt   string `json:"creation_date"`
+	Title		string `json:"title"`
+	Text		string `json:"text"`
+	Closed      bool
+	Media 		[]string
 }
 
 type Post struct {

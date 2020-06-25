@@ -49,8 +49,8 @@ func (app *App) RegisterRoutes() {
 	// app.RegisterProfileRoutes()
 	app.RegisterProjectRoutes()
 	app.RegisterThemeRoutes()
-	// app.RegisterDiscussionRoutes()
 	app.RegisterGoogleCloudRoutes()
+	app.RegisterDiscussionRoutes()
 }
 
 func (app *App) Close() {

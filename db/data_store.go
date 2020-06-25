@@ -9,6 +9,7 @@ type DataStore struct {
 	UserProvider    userProvider
 	ProjectProvider projectProvider
 	ThemeProvider   themeProvider
+	DiscussionProvider discussionProvider
 }
 
 type Closable interface {
@@ -16,11 +17,13 @@ type Closable interface {
 }
 
 type userProvider interface {
-	CreateUser(user *model.UserProfile) (string, error)
+	CreateUser(user *model.IDUserProfile) (string, error)
 	GetUser(id string) (*model.User, error)
 	GetUserProfile(id string) (*model.UserProfile, error)
 	UpdateUser(user *model.UserProfile) (*model.UserProfile, error)
 	RemoveUser(id string) error
+	GetUserFollowers(id string) ([]model.User, error)
+	GetUserFollows(id string) ([]model.User, error)
 	FollowUser(followerID string, followedID string) error
 	UnfollowUser(followerID string, followedID string) error
 	InterestedProject(userID string, projectID string) error
@@ -35,6 +38,7 @@ type projectProvider interface {
 	CreateProject(project *model.Project) (string, error)
 	CreateProjectMedia(projectID string, mediaURL string) error
 	GetProject(id string) (*model.Project, error)
+	GetProjectStub(id string) (*model.ProjectStub, error)
 	UpdateProject(project *model.Project) (*model.Project, error)
 	UpdateCoverPhoto(projectID string, coverURL string) (string, error)
 	UpdateLogo(projectID string, logo string) (string, error)
@@ -44,6 +48,7 @@ type projectProvider interface {
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
 	CheckAdmin(projectID string, userID string) bool
+	GetProjMembers(id string) ([]model.User, error)
 }
 
 type themeProvider interface {
@@ -52,4 +57,9 @@ type themeProvider interface {
 	UpdateTheme(theme *model.Theme) (string, error)
 	//GetProjectsWithTheme(themeName string) error
 	DeleteTheme(themeName string) error
+}
+
+type discussionProvider interface {
+	CreateDiscussion(proj_id string, discussion *model.DiscussionIn) (string, error)
+	GetDiscussion(proj_id string, discNum string) (model.DiscussionOut, error)
 }

@@ -17,6 +17,9 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE")
 
+	app.router.HandleFunc("/users/{id}/followers", app.GetUserFollowers).Methods("GET")
+
+	app.router.HandleFunc("/users/{id}/follows", app.GetUserFollows).Methods("GET")
 	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.FollowUser).Methods("POST")
 	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.UnfollowUser).Methods("DELETE")
 
@@ -28,11 +31,10 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.JoinProject).Methods("POST")
 	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
-
 }
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.UserProfile
+	var newUser model.IDUserProfile
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	// TODO: Validate if the user already exist by checking the email ... here or on the side of postgres?
 	if err != nil {
@@ -54,8 +56,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	newUser.ID = id
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(newUser)
-	return
+	json.NewEncoder(w).Encode(newUser)
 }
 
 func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +87,7 @@ func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	usr, err := app.store.UserProvider.GetUserProfile(userID)
 	if err != nil {
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -140,6 +142,42 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+func (app *App) GetUserFollowers(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	followers, err := app.store.UserProvider.GetUserFollowers(userID)
+	if err != nil {
+		log.Printf("%v\n", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+
+func (app *App) GetUserFollows(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	follows, err := app.store.UserProvider.GetUserFollows(userID)
+	if err != nil {
+		log.Printf("%v\n", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(follows) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	followerID := mux.Vars(r)["follower_id"]
@@ -152,7 +190,7 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 	}
 	err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
-		log.Printf("App.FollowUser - error creating user %v", err)
+		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

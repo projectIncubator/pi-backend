@@ -4,3 +4,4 @@ run:
 	GOOGLE_APPLICATION_CREDENTIALS='key.json' \
 	PORT=8000 \
     go run .
+

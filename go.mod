@@ -17,4 +17,6 @@ require (
 	google.golang.org/api v0.26.0 // indirect
 	google.golang.org/genproto v0.0.0-20200601130524-0f60399e6634 // indirect
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
+	github.com/googollee/go-socket.io v1.4.3 // indirect
+	golang.org/dl v0.0.0-20200611200201-72429b14455f // indirect
 )
