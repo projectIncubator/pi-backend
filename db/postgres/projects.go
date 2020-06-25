@@ -197,7 +197,7 @@ func (p PostgresDBStore) AddTheme(token string, themeName string, projectID stri
 	err = p.database.QueryRow(sqlStatement,
 		themeName,
 		projectID,
-	).Scan(_themeName, _projectID)
+	).Scan(&_themeName, &_projectID)
 
 	if err != nil {
 		return err
@@ -272,7 +272,7 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 	}
 
 	// Fill in the themes array
-	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
+	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
 	rows, err := p.database.Query(sqlStatement, id)
@@ -280,7 +280,6 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 		var theme model.Theme
 		if err = rows.Scan(
 			&theme.Name,
-			&theme.Colour,
 			&theme.Logo,
 			&theme.Description,
 			); err!= nil {
@@ -373,7 +372,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	}
 
 	// Fill in the themes array
-	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
+	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
 	rows, err = p.database.Query(sqlStatement, id)
@@ -381,7 +380,6 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		var theme model.Theme
 		if err = rows.Scan(
 			&theme.Name,
-			&theme.Colour,
 			&theme.Logo,
 			&theme.Description,
 		); err!= nil {

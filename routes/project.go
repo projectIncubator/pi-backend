@@ -20,9 +20,6 @@ func (app *App) RegisterProjectRoutes() {
 
 	app.router.HandleFunc("/projects/auth/{user_token}", app.UpdateProject).Methods("PATCH")
 
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.CreateProjPage).Methods("POST")
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.UpdateProjPage).Methods("PATCH")
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.DeleteProjPage).Methods("DELETE")
 	app.router.HandleFunc("/projects/{id}/themes/{theme_name}/auth/{user_token}", app.AddTheme).Methods("POST")
 	app.router.HandleFunc("/projects/{id}/themes/{theme_name}/auth/{user_token}", app.RemoveTheme).Methods("DELETE")
 	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}/auth/{user_token}", app.DeleteMember).Methods("DELETE")
@@ -33,7 +30,14 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}", app.GetProject).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/stub", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")
+
+	// TODO APIs
+
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.CreateProjPage).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.UpdateProjPage).Methods("PATCH")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.DeleteProjPage).Methods("DELETE")
 	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.GetProjPage).Methods("GET")
+
 }
 
 // Creator APIs
@@ -125,7 +129,7 @@ func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
 	err := app.store.ProjectProvider.AddTheme(userToken, themeName, projectID)
 
 	if err != nil {
-		log.Printf("App.CreateProject - error creating project %v", err)
+		log.Printf("App.AddTheme - error creating project %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
