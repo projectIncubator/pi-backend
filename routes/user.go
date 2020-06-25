@@ -31,7 +31,7 @@ func (app *App) RegisterUserRoutes() {
 
 	// Public APIs
 
-	app.router.HandleFunc("/users/{id}", app.GetUser).Methods("GET")
+	app.router.Handle("/users/{id}", http.HandlerFunc(app.GetUser)).Methods("GET")
 	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
 	app.router.HandleFunc("/users/{id}/followers", app.GetUserFollowers).Methods("GET")
 	app.router.HandleFunc("/users/{id}/follows", app.GetUserFollows).Methods("GET")

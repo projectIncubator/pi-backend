@@ -6,9 +6,12 @@ import (
 
 // Creator APIs
 
-func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
+func (p PostgresDBStore) CreateProject(token string, project *model.Project) (string, error) {
 	sqlStatement :=
-		`INSERT INTO projects(title, state, creator, start_date, end_date, oneliner, discussion_id, logo, cover_photo ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id;`
+		`INSERT INTO projects(title, state, creator, start_date, end_date, oneliner, discussion_id, logo, cover_photo ) 
+			SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9 FROM users
+			WHERE id = $3 AND id_token = $10
+			RETURNING id;`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
 		project.Title,
@@ -20,21 +23,34 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 		project.Discussion,
 		project.Logo,
 		project.CoverPhoto,
+		token,
 	).Scan(&id)
 	if err != nil {
 		return "", err
 	}
 
+	sqlStatement =
+		`INSERT INTO contributing(user_id, project_id, is_admin)
+			VALUES ($1, $2, true);`
+	p.database.QueryRow(sqlStatement,project.Creator,id)
+
 	return id, nil
 }
-func (p PostgresDBStore) RemoveProject(id string) error {
+func (p PostgresDBStore) RemoveProject(token string, id string) error {
 	sqlStatement :=
 		`DELETE FROM projects
-				WHERE id = $1
-				RETURNING id;`
+			WHERE id IN (
+				SELECT p.id
+				FROM projects AS p INNER JOIN
+				   (SELECT users.id FROM users WHERE users.id_token = $2) AS u
+				   ON p.creator = u.id
+				WHERE p.id = $1
+			)
+			RETURNING id;`
 	var _id string
 	err := p.database.QueryRow(sqlStatement,
 		id,
+		token,
 	).Scan(&_id)
 	if err != nil {
 		return err
@@ -47,45 +63,48 @@ func (p PostgresDBStore) RemoveProject(id string) error {
 
 // ... + Admins APIs
 
-func (p PostgresDBStore) AddTheme(themeName string, projectID string) error {
-	sqlStatement := `INSERT INTO project_has_theme(theme_name, project_id) VALUES ($1, $2)
-						RETURNING theme_name, project_id`
+func (p PostgresDBStore) IsAdmin(token string, projectID string) (bool, error) {
 
-	var _themeName, _projectID string
+	var isAdmin bool
+
+	sqlStatement :=
+		`SELECT CASE
+   			WHEN EXISTS (
+       			SELECT u.id FROM users AS u, contributing AS c
+       			WHERE u.id_token = $1 AND c.project_id = $2
+        		AND u.id = c.user_id AND c.is_admin = true
+    		) THEN TRUE
+   			ELSE FALSE
+		END;`
+
 	err := p.database.QueryRow(sqlStatement,
-		themeName,
+		token,
 		projectID,
-	).Scan(_themeName, _projectID)
-
+	).Scan(&isAdmin)
 	if err != nil {
-		return err
+		return false, err
 	}
-	return nil
+
+	return isAdmin, nil
 }
-func (p PostgresDBStore) RemoveTheme(themeName string, projectID string) error {
-	sqlStatement := `DELETE FROM project_has_theme
-						WHERE theme_name = $1 AND project_id = $2
-						RETURNING theme_name, project_id`
 
-	var _userID, _themeName string
-	err := p.database.QueryRow(sqlStatement,
-		themeName,
-		projectID,
-	).Scan(&_userID, &_themeName)
+func (p PostgresDBStore) UpdateProject(token string, project *model.Project) (*model.Project, error) {
 
+	isAdmin, err := p.IsAdmin(token, project.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
-}
-func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, error) {
+	if !isAdmin {
+		return nil, nil // TODO: Scope Error Handling
+	}
+
 	sqlStatement :=
 		`UPDATE projects
 				SET title = $2, state = $3, creator = $4, start_date = $5, end_date = $6, oneliner = $7, logo = $8, cover_photo = $9
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
-	err := p.database.QueryRow(sqlStatement,
+	err = p.database.QueryRow(sqlStatement,
 		project.ID,
 		project.Title,
 		project.State,
@@ -104,14 +123,23 @@ func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, 
 	}
 	return project, nil
 }
-func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
+func (p PostgresDBStore) RemoveMember(token string, projectID string, userID string) error {
+
+	isAdmin, err := p.IsAdmin(token, projectID)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return nil // TODO: Scope Error Handling
+	}
+
 	sqlStatement :=
 		`DELETE FROM contributing
 				WHERE project_id = $1 AND user_id = $2
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
+	err = p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -123,7 +151,16 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 	}
 	return nil
 }
-func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
+func (p PostgresDBStore) ChangeAdmin(token string, projectID string, userID string) error {
+
+	isAdmin, err := p.IsAdmin(token, projectID)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return nil // TODO: Scope Error Handling
+	}
+
 	sqlStatement :=
 		`UPDATE contributing
 				SET is_admin = NOT is_admin 
@@ -131,7 +168,7 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
+	err = p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -140,6 +177,55 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 	}
 	if _userID != userID {
 		return CreateError
+	}
+	return nil
+}
+func (p PostgresDBStore) AddTheme(token string, themeName string, projectID string) error {
+
+	isAdmin, err := p.IsAdmin(token, projectID)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return nil // TODO: Scope Error Handling
+	}
+
+	sqlStatement := `INSERT INTO project_has_theme(theme_name, project_id) VALUES ($1, $2)
+						RETURNING theme_name, project_id`
+
+	var _themeName, _projectID string
+	err = p.database.QueryRow(sqlStatement,
+		themeName,
+		projectID,
+	).Scan(_themeName, _projectID)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (p PostgresDBStore) RemoveTheme(token string, themeName string, projectID string) error {
+
+	isAdmin, err := p.IsAdmin(token, projectID)
+	if err != nil {
+		return err
+	}
+	if !isAdmin {
+		return nil // TODO: Scope Error Handling
+	}
+
+	sqlStatement := `DELETE FROM project_has_theme
+						WHERE theme_name = $1 AND project_id = $2
+						RETURNING theme_name, project_id`
+
+	var _userID, _themeName string
+	err = p.database.QueryRow(sqlStatement,
+		themeName,
+		projectID,
+	).Scan(&_userID, &_themeName)
+
+	if err != nil {
+		return err
 	}
 	return nil
 }

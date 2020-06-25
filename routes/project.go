@@ -13,20 +13,20 @@ func (app *App) RegisterProjectRoutes() {
 
 	// Creator APIs
 
-	app.router.HandleFunc("/projects", app.CreateProject).Methods("POST")
-	app.router.HandleFunc("/projects/{id}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
+	app.router.HandleFunc("/projects/auth/{user_token}", app.CreateProject).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/auth/{user_token}", app.DeleteProject).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
 	// ... + Admins APIs
 
 	app.router.HandleFunc("/projects/auth/{user_token}", app.UpdateProject).Methods("PATCH")
 
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.CreateProjPage).Methods("POST")
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.UpdateProjPage).Methods("PATCH")
-	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.DeleteProjPage).Methods("DELETE")
-	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.AddTheme).Methods("POST")
-	app.router.HandleFunc("/projects/{id}/themes/{theme_name}", app.RemoveTheme).Methods("DELETE")
-	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.DeleteMember).Methods("DELETE")
-	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}", app.ToggleAdmin).Methods("PATCH")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.CreateProjPage).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.UpdateProjPage).Methods("PATCH")
+	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.DeleteProjPage).Methods("DELETE")
+	app.router.HandleFunc("/projects/{id}/themes/{theme_name}/auth/{user_token}", app.AddTheme).Methods("POST")
+	app.router.HandleFunc("/projects/{id}/themes/{theme_name}/auth/{user_token}", app.RemoveTheme).Methods("DELETE")
+	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}/auth/{user_token}", app.DeleteMember).Methods("DELETE")
+	app.router.HandleFunc("/projects/{proj_id}/members/{user_id}/auth/{user_token}", app.ToggleAdmin).Methods("PATCH")
 
 	// Public APIs
 
@@ -39,6 +39,7 @@ func (app *App) RegisterProjectRoutes() {
 // Creator APIs
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
+	token := mux.Vars(r)["user_token"]
 	var newProject model.Project
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
@@ -52,7 +53,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id, err := app.store.ProjectProvider.CreateProject(&newProject)
+	id, err := app.store.ProjectProvider.CreateProject(token, &newProject)
 	if err != nil {
 		log.Printf("App.CreateProject - error creating project %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -64,6 +65,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
+	userToken := mux.Vars(r)["user_token"]
 	projectID := mux.Vars(r)["id"]
 
 	if projectID == "" {
@@ -72,7 +74,7 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.RemoveProject(projectID)
+	err := app.store.ProjectProvider.RemoveProject(userToken, projectID)
 	if err != nil {
 		log.Printf("App.RemoveProject - error removing the project %v", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -84,7 +86,10 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 // ... + Admins APIs
 
 func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
+
+	userToken := mux.Vars(r)["user_token"]
 	var updatedProject model.Project
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateProject - could not read r.Body with ioutil")
@@ -98,7 +103,7 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: Validate that the updated project exists
-	project, err := app.store.ProjectProvider.UpdateProject(&updatedProject)
+	project, err := app.store.ProjectProvider.UpdateProject(userToken, &updatedProject)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -106,19 +111,8 @@ func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
-func (app *App) CreateProjPage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
-}
-func (app *App) UpdateProjPage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
-}
-func (app *App) DeleteProjPage(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
-}
 func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
+	userToken := mux.Vars(r)["user_token"]
 	themeName := mux.Vars(r)["theme_name"]
 	projectID := mux.Vars(r)["id"]
 
@@ -128,7 +122,7 @@ func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.AddTheme(themeName, projectID)
+	err := app.store.ProjectProvider.AddTheme(userToken, themeName, projectID)
 
 	if err != nil {
 		log.Printf("App.CreateProject - error creating project %v", err)
@@ -140,6 +134,7 @@ func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
+	userToken := mux.Vars(r)["user_token"]
 	themeName := mux.Vars(r)["theme_name"]
 	projectID := mux.Vars(r)["id"]
 
@@ -149,7 +144,7 @@ func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.RemoveTheme(themeName, projectID)
+	err := app.store.ProjectProvider.RemoveTheme(userToken, themeName, projectID)
 	if err != nil {
 		log.Printf("App.RemoveProject - error removing the project %v", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -162,6 +157,7 @@ func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
 func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
 	userID := mux.Vars(r)["user_id"]
+	userToken := mux.Vars(r)["user_token"]
 
 	if projectID == "" {
 		log.Printf("App.RemoveMember - empty project id")
@@ -174,7 +170,7 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.RemoveMember(projectID, userID)
+	err := app.store.ProjectProvider.RemoveMember(userToken, projectID, userID)
 	if err != nil {
 		log.Printf("App.RemoveProject - error removing the member %v", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -185,6 +181,7 @@ func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
 	userID := mux.Vars(r)["user_id"]
+	userToken := mux.Vars(r)["user_token"]
 
 	if projectID == "" {
 		log.Printf("App.RemoveProejct - empty project id")
@@ -197,7 +194,7 @@ func (app *App) ToggleAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.ProjectProvider.ChangeAdmin(projectID, userID)
+	err := app.store.ProjectProvider.ChangeAdmin(userToken, projectID, userID)
 	if err != nil {
 		log.Printf("App.ChangeAdmin - error changing the admin %v", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -259,6 +256,21 @@ func (app *App) GetProjMembers(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(members) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+}
+
+// TODO APIs
+
+func (app *App) CreateProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
+}
+func (app *App) UpdateProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
+}
+func (app *App) DeleteProjPage(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode("")
 }
 func (app *App) GetProjPage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)

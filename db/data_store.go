@@ -35,15 +35,26 @@ type userProvider interface {
 }
 
 type projectProvider interface {
-	CreateProject(project *model.Project) (string, error)
+
+	// Creator APIs
+
+	CreateProject(token string, project *model.Project) (string, error)
+	RemoveProject(token string, id string) error
+
+	// Admin APIs
+
+	IsAdmin(token string, projectID string) (bool, error)
+
+	UpdateProject(token string, project *model.Project) (*model.Project, error)
+	RemoveMember(token string, projectID string, userID string) error
+	ChangeAdmin(token string, projectID string, userID string) error
+	AddTheme(token string, themeName string, projectID string) error
+	RemoveTheme(token string, themeName string, projectID string) error
+
+	// Public APIs
+
 	GetProject(id string) (*model.Project, error)
 	GetProjectStub(id string) (*model.ProjectStub, error)
-	UpdateProject(project *model.Project) (*model.Project, error)
-	RemoveProject(id string) error
-	RemoveMember(projectID string, userID string) error
-	ChangeAdmin(projectID string, userID string) error
-	AddTheme(themeName string, projectID string) error
-	RemoveTheme(themeName string, projectID string) error
 	GetProjMembers(id string) ([]model.User, error)
 }
 
