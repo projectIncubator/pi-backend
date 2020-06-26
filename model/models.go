@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"time"
 )
@@ -37,7 +38,8 @@ type UserProfile struct {
 	Email            string        `json:"email"`
 	Deactivated      bool          `json:"deactivated"`
 	Banned           bool          `json:"banned"`
-	Bio              string        `json:"bio"`
+	Bio              sql.NullString`json:"bio"`
+	Links			 sql.NullString`json:"links"`
 	FollowingCount   int           `json:"following_count"`
 	FollowersCount   int           `json:"followers_count"`
 	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data

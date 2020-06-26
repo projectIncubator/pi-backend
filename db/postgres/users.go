@@ -27,7 +27,7 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser) (string, error) {
 func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, deactivated = $7, banned = $8
+				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, bio = $7, links = $8, deactivated = $9, banned = $10
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -38,6 +38,8 @@ func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.
 		user.Email,
 		user.Image,
 		user.ProfileID,
+		user.Bio,
+		user.Links,
 		user.Deactivated,
 		user.Banned,
 	).Scan(&_id)
@@ -225,7 +227,9 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
-	sqlStatement := `SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
+	sqlStatement :=
+		`SELECT id, first_name, last_name, email, image, profile_id, bio, links, deactivated, banned 
+			FROM users WHERE id=$1;`
 	var userProfile model.UserProfile
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -235,6 +239,8 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		&userProfile.Email,
 		&userProfile.Image,
 		&userProfile.ProfileID,
+		&userProfile.Bio,
+		&userProfile.Links,
 		&userProfile.Deactivated,
 		&userProfile.Banned,
 	)
