@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"go-api/model"
 )
 
@@ -10,6 +11,7 @@ type DataStore struct {
 	ProjectProvider projectProvider
 	ThemeProvider   themeProvider
 	DiscussionProvider discussionProvider
+	ScopeProvider	scopeProvider
 }
 
 type Closable interface {
@@ -20,7 +22,7 @@ type userProvider interface {
 	CreateUser(user *model.IDUser) (string, error)
 	GetUser(id string) (*model.User, error)
 	GetUserProfile(id string) (*model.UserProfile, error)
-	UpdateUser(token string, user *model.UserProfile) (*model.UserProfile, error)
+	UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error)
 	RemoveUser(id string) error
 	GetUserFollowers(id string) ([]model.User, error)
 	GetUserFollows(id string) ([]model.User, error)
@@ -38,18 +40,16 @@ type projectProvider interface {
 
 	// Creator APIs
 
-	CreateProject(token string, project *model.Project) (string, error)
-	RemoveProject(token string, id string) error
+	CreateProject(project *model.Project) (string, error)
+	RemoveProject(id string) error
 
 	// Admin APIs
 
-	IsAdmin(token string, projectID string) (bool, error)
-
-	UpdateProject(token string, project *model.Project) (*model.Project, error)
-	RemoveMember(token string, projectID string, userID string) error
-	ChangeAdmin(token string, projectID string, userID string) error
-	AddTheme(token string, themeName string, projectID string) error
-	RemoveTheme(token string, themeName string, projectID string) error
+	UpdateProject(project *model.Project) (*model.Project, error)
+	RemoveMember(projectID string, userID string) error
+	ChangeAdmin(projectID string, userID string) error
+	AddTheme(themeName string, projectID string) error
+	RemoveTheme(themeName string, projectID string) error
 
 	// Public APIs
 
@@ -69,4 +69,10 @@ type themeProvider interface {
 type discussionProvider interface {
 	CreateDiscussion(proj_id string, discussion *model.DiscussionIn) (string, error)
 	GetDiscussion(proj_id string, discNum string) (model.DiscussionOut, error)
+}
+
+type scopeProvider interface {
+	GetCreatorID(token string, projectID string) (sql.NullString, error)
+	GetAdminID(token string, projectID string) (sql.NullString, error)
+	GetUserID(token string) (sql.NullString, error)
 }

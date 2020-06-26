@@ -24,16 +24,15 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser) (string, error) {
 	return id, nil
 }
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
-func (p PostgresDBStore) UpdateUser(token string, user *model.UserProfile) (*model.UserProfile, error) {
+func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $3, last_name = $4, email = $5, image = $6, profile_id = $7, deactivated = $7, banned = $8
-				WHERE id_token = $1 AND id = $2
+				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, deactivated = $7, banned = $8
+				WHERE id = $1
 				RETURNING id;`
 	var _id string
 	err := p.database.QueryRow(sqlStatement,
-		token,
-		user.ID,
+		id,
 		user.FirstName,
 		user.LastName,
 		user.Email,
@@ -54,7 +53,7 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 	sqlStatement :=
 		`UPDATE users
 			SET deactivated = TRUE
-			WHERE id_token = $1
+			WHERE id = $1
 			RETURNING id;`
 	var _id string
 	err := p.database.QueryRow(sqlStatement,
@@ -71,9 +70,7 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 
 func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {
 	sqlStatement := `INSERT INTO follows(follower_id, followed_id) 
-						SELECT u1.id AS follower_id, u2.id AS followed_id
-						FROM users AS u1, users AS u2
-						WHERE u1.id_token = $1 AND u2.id = $2
+						VALUES ($1, $2)
 						RETURNING follower_id, followed_id`
 
 	var _followedID, _followerID string
@@ -89,11 +86,7 @@ func (p PostgresDBStore) FollowUser(followerID string, followedID string) error 
 func (p PostgresDBStore) UnfollowUser(followerID string, followedID string) error {
 
 	sqlStatement := `DELETE FROM follows
-						WHERE follower_id IN (
-							SELECT id FROM users
-							WHERE id_token = $1
-						) 
-						AND followed_id = $2
+						WHERE follower_id = $1 AND followed_id = $2
 						RETURNING follower_id, followed_id`
 
 	var _followedID, _followerID string
@@ -110,10 +103,8 @@ func (p PostgresDBStore) UnfollowUser(followerID string, followedID string) erro
 func (p PostgresDBStore) InterestedProject(userID string, projectID string) error {
 
 	sqlStatement := `INSERT INTO interested(user_id, project_id) 
-						SELECT users.id AS user_id, projects.id AS project_id
-						FROM users, projects
-						WHERE users.id_token = $1 AND projects.id = $2
-						RETURNING user_id, project_id`
+						VALUES ($1,$2)
+						RETURNING user_id, project_id;`
 
 	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
@@ -129,11 +120,7 @@ func (p PostgresDBStore) InterestedProject(userID string, projectID string) erro
 func (p PostgresDBStore) UninterestedProject(userID string, projectID string) error {
 
 	sqlStatement := `DELETE FROM interested
-						WHERE user_id IN (
-							SELECT id FROM users
-							WHERE id_token = $1
-						)
-						AND project_id = $2
+						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
 
 	var _userID, _projectID string
@@ -151,10 +138,7 @@ func (p PostgresDBStore) UninterestedProject(userID string, projectID string) er
 func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
 
 	sqlStatement := `INSERT INTO contributing(user_id, project_id) 
-						SELECT users.id AS user_id, projects.id AS project_id
-						FROM users, projects
-						WHERE users.id_token = $1 AND projects.id = $2
-						RETURNING user_id, project_id`
+						VALUES ($1, $2)`
 
 	var _userID, _projectID string
 	err := p.database.QueryRow(sqlStatement,
@@ -170,11 +154,7 @@ func (p PostgresDBStore) JoinProject(userID string, projectID string) error {
 func (p PostgresDBStore) QuitProject(userID string, projectID string) error {
 
 	sqlStatement := `DELETE FROM contributing
-						WHERE user_id IN (
-							SELECT id FROM users
-							WHERE id_token = $1
-						) 
-						AND project_id = $2
+						WHERE user_id = $1 AND project_id = $2
 						RETURNING user_id, project_id`
 
 	var _userID, _projectID string
@@ -192,9 +172,7 @@ func (p PostgresDBStore) QuitProject(userID string, projectID string) error {
 func (p PostgresDBStore) InterestedTheme(userID string, themeName string) error {
 
 	sqlStatement := `INSERT INTO user_interested_theme(user_id, theme_name) 
-						SELECT users.id AS user_id, themes.name AS theme_name
-						FROM users, themes
-						WHERE users.id_token = $1 AND themes.name = $2
+						VALUES ($1, $2)
 						RETURNING user_id, project_id`
 
 	var _userID, _themeName string
@@ -211,11 +189,7 @@ func (p PostgresDBStore) InterestedTheme(userID string, themeName string) error 
 func (p PostgresDBStore) UninterestedTheme(userID string, themeName string) error {
 
 	sqlStatement := `DELETE FROM user_interested_theme
-						WHERE user_id IN (
-							SELECT id FROM users
-							WHERE id_token = $1
-						) 
-						AND theme_name = $2
+						WHERE user_id = $1 AND theme_name = $2
 						RETURNING user_id, project_id`
 
 	var _userID, _themeName string

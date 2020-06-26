@@ -14,20 +14,20 @@ func (app *App) RegisterUserRoutes() {
 	// Private APIs
 
 	app.router.HandleFunc("/users", app.CreateUser).Methods("POST")
-	app.router.HandleFunc("/users/{id_token}", app.UpdateUser).Methods("PATCH")
-	app.router.HandleFunc("/users/{id_token}", app.DeleteUser).Methods("DELETE")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.UpdateProject),USER)).Methods("PATCH")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.DeleteUser),USER)).Methods("DELETE")
 
-	app.router.HandleFunc("/users/{follower_token}/follows/{followed_id}", app.FollowUser).Methods("POST")
-	app.router.HandleFunc("/users/{follower_token}/follows/{followed_id}", app.UnfollowUser).Methods("DELETE")
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.FollowUser),USER)).Methods("POST")
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.UnfollowUser),USER)).Methods("DELETE")
 
-	app.router.HandleFunc("/users/{user_token}/interested/{project_id}", app.InterestedProject).Methods("POST")
-	app.router.HandleFunc("/users/{user_token}/interested/{project_id}", app.UninterestedProject).Methods("DELETE")
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.InterestedProject),USER)).Methods("POST")
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.UninterestedProject),USER)).Methods("DELETE")
 
-	app.router.HandleFunc("/users/{user_token}/interested/{theme_name}", app.InterestedTheme).Methods("POST")
-	app.router.HandleFunc("/users/{user_token}/interested/{theme_name}", app.UninterestedTheme).Methods("DELETE")
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.InterestedTheme),USER)).Methods("POST")
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.UninterestedTheme),USER)).Methods("DELETE")
 
-	app.router.HandleFunc("/users/{user_token}/contributes/{project_id}", app.JoinProject).Methods("POST")
-	app.router.HandleFunc("/users/{user_token}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.JoinProject),USER)).Methods("POST")
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.QuitProject),USER)).Methods("DELETE")
 
 	// Public APIs
 
@@ -64,9 +64,10 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	userToken := mux.Vars(r)["id_token"]
-
 	var updatedUser model.UserProfile
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateUser - could not read r.Body with ioutil")
@@ -80,7 +81,7 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr, err := app.store.UserProvider.UpdateUser(userToken, &updatedUser)
+	usr, err := app.store.UserProvider.UpdateUser(userID, &updatedUser)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -90,12 +91,8 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
 }
 func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id_token"]
-	if userID == "" {
-		log.Printf("App.RemoveUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
 
 	err := app.store.UserProvider.RemoveUser(userID)
 	if err != nil {
@@ -109,7 +106,8 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 
-	followerID := mux.Vars(r)["follower_token"]
+	followerID := r.Context().Value("user_id").(AuthWraper).id
+
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
@@ -117,6 +115,7 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
 		log.Printf("%v\n", err)
@@ -128,7 +127,8 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
-	followerID := mux.Vars(r)["follower_token"]
+	followerID := r.Context().Value("user_id").(AuthWraper).id
+
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
@@ -148,7 +148,9 @@ func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -167,7 +169,9 @@ func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -187,7 +191,9 @@ func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	themeName := mux.Vars(r)["theme_name"]
 
 	if userID == "" || themeName == "" {
@@ -206,7 +212,10 @@ func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -226,7 +235,9 @@ func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -245,7 +256,9 @@ func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_token"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {

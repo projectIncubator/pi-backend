@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS user_interested_theme;
 DROP TABLE IF EXISTS themes;
 DROP TABLE IF EXISTS discussion_has_media;
 DROP TABLE IF EXISTS post_has_media;
+DROP TABLE IF EXISTS project_has_media;
 DROP TABLE IF EXISTS user_react_post;
 DROP TABLE IF EXISTS medias;
 DROP TABLE IF EXISTS posts;

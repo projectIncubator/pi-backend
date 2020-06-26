@@ -1,16 +1,13 @@
 package postgres
 
-import (
-	"go-api/model"
-)
+import "go-api/model"
 
 // Creator APIs
 
-func (p PostgresDBStore) CreateProject(token string, project *model.Project) (string, error) {
+func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	sqlStatement :=
 		`INSERT INTO projects(title, state, creator, start_date, end_date, oneliner, discussion_id, logo, cover_photo ) 
-			SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9 FROM users
-			WHERE id = $3 AND id_token = $10
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 			RETURNING id;`
 	var id string
 	err := p.database.QueryRow(sqlStatement,
@@ -23,7 +20,6 @@ func (p PostgresDBStore) CreateProject(token string, project *model.Project) (st
 		project.Discussion,
 		project.Logo,
 		project.CoverPhoto,
-		token,
 	).Scan(&id)
 	if err != nil {
 		return "", err
@@ -36,21 +32,14 @@ func (p PostgresDBStore) CreateProject(token string, project *model.Project) (st
 
 	return id, nil
 }
-func (p PostgresDBStore) RemoveProject(token string, id string) error {
+func (p PostgresDBStore) RemoveProject(id string) error {
 	sqlStatement :=
 		`DELETE FROM projects
-			WHERE id IN (
-				SELECT p.id
-				FROM projects AS p INNER JOIN
-				   (SELECT users.id FROM users WHERE users.id_token = $2) AS u
-				   ON p.creator = u.id
-				WHERE p.id = $1
-			)
+			WHERE id = $1
 			RETURNING id;`
 	var _id string
 	err := p.database.QueryRow(sqlStatement,
 		id,
-		token,
 	).Scan(&_id)
 	if err != nil {
 		return err
@@ -63,40 +52,7 @@ func (p PostgresDBStore) RemoveProject(token string, id string) error {
 
 // ... + Admins APIs
 
-func (p PostgresDBStore) IsAdmin(token string, projectID string) (bool, error) {
-
-	var isAdmin bool
-
-	sqlStatement :=
-		`SELECT CASE
-   			WHEN EXISTS (
-       			SELECT u.id FROM users AS u, contributing AS c
-       			WHERE u.id_token = $1 AND c.project_id = $2
-        		AND u.id = c.user_id AND c.is_admin = true
-    		) THEN TRUE
-   			ELSE FALSE
-		END;`
-
-	err := p.database.QueryRow(sqlStatement,
-		token,
-		projectID,
-	).Scan(&isAdmin)
-	if err != nil {
-		return false, err
-	}
-
-	return isAdmin, nil
-}
-
-func (p PostgresDBStore) UpdateProject(token string, project *model.Project) (*model.Project, error) {
-
-	isAdmin, err := p.IsAdmin(token, project.ID)
-	if err != nil {
-		return nil, err
-	}
-	if !isAdmin {
-		return nil, nil // TODO: Scope Error Handling
-	}
+func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, error) {
 
 	sqlStatement :=
 		`UPDATE projects
@@ -104,7 +60,7 @@ func (p PostgresDBStore) UpdateProject(token string, project *model.Project) (*m
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
-	err = p.database.QueryRow(sqlStatement,
+	err := p.database.QueryRow(sqlStatement,
 		project.ID,
 		project.Title,
 		project.State,
@@ -123,15 +79,7 @@ func (p PostgresDBStore) UpdateProject(token string, project *model.Project) (*m
 	}
 	return project, nil
 }
-func (p PostgresDBStore) RemoveMember(token string, projectID string, userID string) error {
-
-	isAdmin, err := p.IsAdmin(token, projectID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return nil // TODO: Scope Error Handling
-	}
+func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 
 	sqlStatement :=
 		`DELETE FROM contributing
@@ -139,7 +87,7 @@ func (p PostgresDBStore) RemoveMember(token string, projectID string, userID str
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err = p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
+	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -151,15 +99,7 @@ func (p PostgresDBStore) RemoveMember(token string, projectID string, userID str
 	}
 	return nil
 }
-func (p PostgresDBStore) ChangeAdmin(token string, projectID string, userID string) error {
-
-	isAdmin, err := p.IsAdmin(token, projectID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return nil // TODO: Scope Error Handling
-	}
+func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 
 	sqlStatement :=
 		`UPDATE contributing
@@ -168,7 +108,7 @@ func (p PostgresDBStore) ChangeAdmin(token string, projectID string, userID stri
 				RETURNING project_id, user_id;`
 	var _projectID string
 	var _userID string
-	err = p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
+	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
 	if err != nil {
 		return err
 	}
@@ -180,21 +120,13 @@ func (p PostgresDBStore) ChangeAdmin(token string, projectID string, userID stri
 	}
 	return nil
 }
-func (p PostgresDBStore) AddTheme(token string, themeName string, projectID string) error {
-
-	isAdmin, err := p.IsAdmin(token, projectID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return nil // TODO: Scope Error Handling
-	}
+func (p PostgresDBStore) AddTheme(themeName string, projectID string) error {
 
 	sqlStatement := `INSERT INTO project_has_theme(theme_name, project_id) VALUES ($1, $2)
 						RETURNING theme_name, project_id`
 
 	var _themeName, _projectID string
-	err = p.database.QueryRow(sqlStatement,
+	err := p.database.QueryRow(sqlStatement,
 		themeName,
 		projectID,
 	).Scan(&_themeName, &_projectID)
@@ -204,22 +136,14 @@ func (p PostgresDBStore) AddTheme(token string, themeName string, projectID stri
 	}
 	return nil
 }
-func (p PostgresDBStore) RemoveTheme(token string, themeName string, projectID string) error {
-
-	isAdmin, err := p.IsAdmin(token, projectID)
-	if err != nil {
-		return err
-	}
-	if !isAdmin {
-		return nil // TODO: Scope Error Handling
-	}
+func (p PostgresDBStore) RemoveTheme(themeName string, projectID string) error {
 
 	sqlStatement := `DELETE FROM project_has_theme
 						WHERE theme_name = $1 AND project_id = $2
 						RETURNING theme_name, project_id`
 
 	var _userID, _themeName string
-	err = p.database.QueryRow(sqlStatement,
+	err := p.database.QueryRow(sqlStatement,
 		themeName,
 		projectID,
 	).Scan(&_userID, &_themeName)
