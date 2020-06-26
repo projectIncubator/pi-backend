@@ -30,12 +30,6 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 	destination := mux.Vars(r)["destination"]
 
-	//// TODO: Would this be handled in getting the project below? --> Would have to find with projectID anyways so is it worth it?
-	//if !utils.IsValidUUID(projectID) {
-	//	log.Println("App.AddObject - projectID is not a valid UUID")
-	//	w.WriteHeader(http.StatusBadRequest)
-	//	return
-	//}
 	project, err := app.store.ProjectProvider.GetProject(projectID)
 
 	if project == nil { // Check that the project exists (not storing for some uuid that isnt a real project
@@ -91,7 +85,6 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
-	// TODO validate that if the user is the admin of the project project.photos/project.logo
 	type UserToken struct {
 		ID        string `json:"id"`
 		FileName  string `json:"name"`
