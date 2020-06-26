@@ -36,7 +36,6 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	//	w.WriteHeader(http.StatusBadRequest)
 	//	return
 	//}
-
 	project, err := app.store.ProjectProvider.GetProject(projectID)
 
 	if project == nil { // Check that the project exists (not storing for some uuid that isnt a real project
@@ -73,14 +72,13 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 
 	filename := header.Filename
 	log.Println(filename)
-
 	err = cloud.GCSUploader(name, imageFile)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
 		w.WriteHeader(http.StatusOK)
-		if destination == "coverphoto" {
+		if destination == "cover_photo" {
 			app.store.ProjectProvider.UpdateCoverPhoto(projectID, baseUrl+name)
 		}
 		if destination == "logo" {

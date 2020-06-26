@@ -59,7 +59,7 @@ func (p PostgresDBStore) CreateProjectMedia(projectID string, mediaURL string) e
 	err := p.database.QueryRow(sqlStatement,
 		projectID,
 		mediaURL,
-	).Scan(returnedID, returnedURL)
+	).Scan(&returnedID, &returnedURL)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,6 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	//Fill in the admins array
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 							FROM users, contributing
@@ -182,25 +181,24 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		}
 		project.Discussion = append(project.Discussion, discussion)
 	}
-
 	// Fill in the themes array
-	sqlStatement = `SELECT themes.name, themes.colour, themes.logo, themes.description
+	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
 	rows, err = p.database.Query(sqlStatement, id)
 	for rows.Next() {
+
 		var theme model.Theme
 		if err = rows.Scan(
 			&theme.Name,
-			&theme.Colour,
 			&theme.Logo,
 			&theme.Description,
 		); err!= nil {
 			return nil, err
 		}
+
 		project.Themes = append(project.Themes, theme)
 	}
-
 	// Fill in the sidebar array
 	sqlStatement = `SELECT module_type, content
 						FROM sidebar_modules
@@ -271,7 +269,7 @@ func (p PostgresDBStore) UpdateProject(project *model.Project) (*model.Project, 
 func (p PostgresDBStore) UpdateCoverPhoto(projectID string, coverURL string) (string, error) {
 	sqlStatement :=
 		`UPDATE projects
-				SET coverphoto = $2
+				SET cover_photo = $2
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
