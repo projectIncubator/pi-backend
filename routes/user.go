@@ -10,33 +10,38 @@ import (
 )
 
 func (app *App) RegisterUserRoutes() {
+
+	// Private APIs
+
 	app.router.HandleFunc("/users", app.CreateUser).Methods("POST")
-	app.router.HandleFunc("/users/{id}", app.GetUser).Methods("GET")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.UpdateProject),USER)).Methods("PATCH")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.DeleteUser),USER)).Methods("DELETE")
+
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.FollowUser),USER)).Methods("POST")
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.UnfollowUser),USER)).Methods("DELETE")
+
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.InterestedProject),USER)).Methods("POST")
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.UninterestedProject),USER)).Methods("DELETE")
+
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.InterestedTheme),USER)).Methods("POST")
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.UninterestedTheme),USER)).Methods("DELETE")
+
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.JoinProject),USER)).Methods("POST")
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.QuitProject),USER)).Methods("DELETE")
+
+	// Public APIs
+
+	app.router.Handle("/users/{id}", http.HandlerFunc(app.GetUser)).Methods("GET")
 	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
-	app.router.HandleFunc("/users", app.UpdateUser).Methods("PATCH")
-
-	app.router.HandleFunc("/users/{id}", app.DeleteUser).Methods("DELETE")
-
 	app.router.HandleFunc("/users/{id}/followers", app.GetUserFollowers).Methods("GET")
-
 	app.router.HandleFunc("/users/{id}/follows", app.GetUserFollows).Methods("GET")
-	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.FollowUser).Methods("POST")
-	app.router.HandleFunc("/users/{follower_id}/follows/{followed_id}", app.UnfollowUser).Methods("DELETE")
-
-	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.InterestedProject).Methods("POST")
-	app.router.HandleFunc("/users/{user_id}/interested/{project_id}", app.UninterestedProject).Methods("DELETE")
-
-	app.router.HandleFunc("/users/{user_id}/interested/{theme_name}", app.InterestedTheme).Methods("POST")
-	app.router.HandleFunc("/users/{user_id}/interested/{theme_name}", app.UninterestedTheme).Methods("DELETE")
-
-	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.JoinProject).Methods("POST")
-	app.router.HandleFunc("/users/{user_id}/contributes/{project_id}", app.QuitProject).Methods("DELETE")
 }
 
+// Private APIs
+
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var newUser model.IDUserProfile
+	var newUser model.IDUser
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
-	// TODO: Validate if the user already exist by checking the email ... here or on the side of postgres?
 	if err != nil {
 		log.Printf("App.CreateUser - error reading request body %v", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -54,52 +59,15 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	newUser.ID = id
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newUser)
+	json.NewEncoder(w).Encode(id)
 }
-
-func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
-	// Input
-	userID := mux.Vars(r)["id"]
-
-	if userID == "" { // TODO: REGEX to validate other forms
-		log.Printf("App.GetOneUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	usr, err := app.store.UserProvider.GetUser(userID)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
-}
-
-func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
-	// Input
-	userID := mux.Vars(r)["id"]
-	if userID == "" { // TODO: REGEX to validate other forms
-		log.Printf("App.GetOneUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	usr, err := app.store.UserProvider.GetUserProfile(userID)
-	if err != nil {
-		log.Printf("%v\n", err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
-}
-
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	// Input - POST JSON
-	// Validation
-	// TODO
+
 	var updatedUser model.UserProfile
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateUser - could not read r.Body with ioutil")
@@ -112,8 +80,8 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	// TODO: Validate that the updated user exists
-	usr, err := app.store.UserProvider.UpdateUser(&updatedUser)
+
+	usr, err := app.store.UserProvider.UpdateUser(userID, &updatedUser)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -122,15 +90,9 @@ func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
 }
-
 func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id"]
-	// TODO: More validation
-	if userID == "" {
-		log.Printf("App.RemoveUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
 
 	err := app.store.UserProvider.RemoveUser(userID)
 	if err != nil {
@@ -142,45 +104,10 @@ func (app *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (app *App) GetUserFollowers(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id"]
-
-	if userID == "" { // TODO: REGEX to validate other forms
-		log.Printf("App.GetOneUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	followers, err := app.store.UserProvider.GetUserFollowers(userID)
-	if err != nil {
-		log.Printf("%v\n", err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
-}
-
-func (app *App) GetUserFollows(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["id"]
-
-	if userID == "" { // TODO: REGEX to validate other forms
-		log.Printf("App.GetOneUser - empty user id")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	follows, err := app.store.UserProvider.GetUserFollows(userID)
-	if err != nil {
-		log.Printf("%v\n", err)
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(follows) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
-}
-
 func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 
-	followerID := mux.Vars(r)["follower_id"]
+	followerID := r.Context().Value("user_id").(AuthWraper).id
+
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
@@ -188,6 +115,7 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
 		log.Printf("%v\n", err)
@@ -197,10 +125,10 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	return
 }
-
 func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
-	followerID := mux.Vars(r)["follower_id"]
+	followerID := r.Context().Value("user_id").(AuthWraper).id
+
 	followedID := mux.Vars(r)["followed_id"]
 
 	if followerID == "" || followedID == "" {
@@ -220,7 +148,9 @@ func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -238,9 +168,10 @@ func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	return
 }
-
 func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -260,7 +191,9 @@ func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	themeName := mux.Vars(r)["theme_name"]
 
 	if userID == "" || themeName == "" {
@@ -278,9 +211,11 @@ func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	return
 }
-
 func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -300,7 +235,9 @@ func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -318,9 +255,10 @@ func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	return
 }
-
 func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
-	userID := mux.Vars(r)["user_id"]
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+
 	projectID := mux.Vars(r)["project_id"]
 
 	if userID == "" || projectID == "" {
@@ -337,4 +275,75 @@ func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusCreated)
 	return
+}
+
+// Public APIs
+
+func (app *App) GetUser(w http.ResponseWriter, r *http.Request) {
+	// Input
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	usr, err := app.store.UserProvider.GetUser(userID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+func (app *App) GetUserProfile(w http.ResponseWriter, r *http.Request) {
+	// Input
+	userID := mux.Vars(r)["id"]
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	usr, err := app.store.UserProvider.GetUserProfile(userID)
+	if err != nil {
+		log.Printf("%v\n", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(usr) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+func (app *App) GetUserFollowers(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	followers, err := app.store.UserProvider.GetUserFollowers(userID)
+	if err != nil {
+		log.Printf("%v\n", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(followers) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
+}
+func (app *App) GetUserFollows(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if userID == "" { // TODO: REGEX to validate other forms
+		log.Printf("App.GetOneUser - empty user id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	follows, err := app.store.UserProvider.GetUserFollows(userID)
+	if err != nil {
+		log.Printf("%v\n", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(follows) // <- Sending the usr as a json {id: ..., first_name: ..., last_name ... , .. }
 }

@@ -11,13 +11,11 @@ type NullTime struct {
 	time.Time
 	Valid bool // Valid is true if Time is not NULL
 }
-
 // Scan implements the Scanner interface.
 func (nt *NullTime) Scan(value interface{}) error {
 	nt.Time, nt.Valid = value.(time.Time)
 	return nil
 }
-
 // Value implements the driver Valuer interface.
 func (nt NullTime) Value() (driver.Value, error) {
 	if !nt.Valid {
@@ -81,7 +79,6 @@ type SideBarModule struct {
 
 type Theme struct {
 	Name        string `json:"name"`
-	Colour      string `json:"colour"` //TODO: remove
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 }

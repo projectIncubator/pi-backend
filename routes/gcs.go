@@ -16,7 +16,7 @@ func (app *App) RegisterGoogleCloudRoutes() {
 
 	app.router.HandleFunc("/project/{project_id}/upload/{destination}", app.AddObject).Methods("PUT")
 
-	app.router.HandleFunc("/projects/{project_id}/delete/{filename}", app.DeleteObject).Methods("DELETE")
+	app.router.HandleFunc("/project/{project_id}/delete", app.DeleteObject).Methods("DELETE")
 
 }
 
@@ -94,6 +94,7 @@ func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 	// TODO validate that if the user is the admin of the project project.photos/project.logo
 	type UserToken struct {
 		ID        string `json:"id"`
+		FileName  string `json:"name"`
 	}
 
 	var userTk UserToken
@@ -111,6 +112,7 @@ func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userID :=userTk.ID
+	fileName := userTk.FileName
 	projectID := mux.Vars(r)["project_id"]
 	//Call a function to check if the user is an admin if the user is an admin
 	isAdmin :=app.store.ProjectProvider.CheckAdmin(projectID, userID)
@@ -119,7 +121,6 @@ func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	fileName := mux.Vars(r)["filename"]
 	err = cloud.GCSDelete(fileName)
 	if err != nil {
 		log.Printf("App.DeleteObject - internal error, can't delete %v", err)

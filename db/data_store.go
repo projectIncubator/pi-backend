@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"go-api/model"
 )
 
@@ -10,6 +11,7 @@ type DataStore struct {
 	ProjectProvider projectProvider
 	ThemeProvider   themeProvider
 	DiscussionProvider discussionProvider
+	ScopeProvider	scopeProvider
 }
 
 type Closable interface {
@@ -17,10 +19,10 @@ type Closable interface {
 }
 
 type userProvider interface {
-	CreateUser(user *model.IDUserProfile) (string, error)
+	CreateUser(user *model.IDUser) (string, error)
 	GetUser(id string) (*model.User, error)
 	GetUserProfile(id string) (*model.UserProfile, error)
-	UpdateUser(user *model.UserProfile) (*model.UserProfile, error)
+	UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error)
 	RemoveUser(id string) error
 	GetUserFollowers(id string) ([]model.User, error)
 	GetUserFollows(id string) ([]model.User, error)
@@ -35,19 +37,32 @@ type userProvider interface {
 }
 
 type projectProvider interface {
+
+	// Creator APIs
+
 	CreateProject(project *model.Project) (string, error)
+
 	CreateProjectMedia(projectID string, mediaURL string) error
-	GetProject(id string) (*model.Project, error)
-	GetProjectStub(id string) (*model.ProjectStub, error)
-	UpdateProject(project *model.Project) (*model.Project, error)
 	UpdateCoverPhoto(projectID string, coverURL string) (string, error)
 	UpdateLogo(projectID string, logo string) (string, error)
 	RemoveProject(id string) error
+
+	// Admin APIs
+
+	UpdateProject(project *model.Project) (*model.Project, error)
 	RemoveMember(projectID string, userID string) error
 	ChangeAdmin(projectID string, userID string) error
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
+
 	CheckAdmin(projectID string, userID string) bool
+
+
+	// Public APIs
+
+	GetProject(id string) (*model.Project, error)
+	GetProjectStub(id string) (*model.ProjectStub, error)
+
 	GetProjMembers(id string) ([]model.User, error)
 }
 
@@ -62,4 +77,10 @@ type themeProvider interface {
 type discussionProvider interface {
 	CreateDiscussion(proj_id string, discussion *model.DiscussionIn) (string, error)
 	GetDiscussion(proj_id string, discNum string) (model.DiscussionOut, error)
+}
+
+type scopeProvider interface {
+	GetCreatorID(token string, projectID string) (sql.NullString, error)
+	GetAdminID(token string, projectID string) (sql.NullString, error)
+	GetUserID(token string) (sql.NullString, error)
 }

@@ -7,12 +7,11 @@ import (
 
 func (p PostgresDBStore) CreateTheme(theme *model.Theme) error {
 	sqlStatement :=
-		`INSERT INTO themes(name, colour, logo, description) VALUES ($1, $2, $3, $4) RETURNING name`
+		`INSERT INTO themes(name, logo, description) VALUES ($1, $2, $3) RETURNING name`
 
 	var name string
 	err := p.database.QueryRow(sqlStatement,
 		theme.Name,
-		theme.Colour,
 		theme.Logo,
 		theme.Description,
 	).Scan(&name)
@@ -25,13 +24,12 @@ func (p PostgresDBStore) CreateTheme(theme *model.Theme) error {
 }
 
 func (p PostgresDBStore) GetTheme(themeName string) (*model.Theme, error) {
-	sqlStatement := `SELECT name, colour, logo, description FROM themes WHERE name=$1;`
+	sqlStatement := `SELECT name, logo, description FROM themes WHERE name=$1;`
 
 	var theme model.Theme
 	row := p.database.QueryRow(sqlStatement, themeName)
 	err := row.Scan(
 		&theme.Name,
-		&theme.Colour,
 		&theme.Logo,
 		&theme.Description,
 	)
@@ -45,13 +43,12 @@ func (p PostgresDBStore) GetTheme(themeName string) (*model.Theme, error) {
 func (p PostgresDBStore) UpdateTheme(theme *model.Theme) (string, error) {
 	sqlStatement :=
 		`UPDATE themes
-				SET name = $1, colour = $2, logo = $3, description = $4
+				SET name = $1, logo = $2, description = $3
 				WHERE name = $1
 				RETURNING name;`
 	var _name string
 	err := p.database.QueryRow(sqlStatement,
 		theme.Name,
-		theme.Colour,
 		theme.Logo,
 		theme.Description,
 	).Scan(&_name)
