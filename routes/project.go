@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 )
 
 func (app *App) RegisterProjectRoutes() {
@@ -45,8 +46,13 @@ func (app *App) RegisterProjectRoutes() {
 // Creator APIs
 
 func (app *App) Test(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(r)
+
+	data, err := httputil.DumpRequest(r, false)
+	if err != nil {
+		log.Fatal("Error")
+	}
+	json.NewEncoder(w).Encode(string(data))
+
 	return
 }
 
