@@ -33,6 +33,7 @@ CREATE TABLE users
     banned          BOOLEAN DEFAULT FALSE
 );
 
+
 CREATE TABLE projects
 (
     id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -46,6 +47,14 @@ CREATE TABLE projects
     logo          TEXT DEFAULT 'placeholder_url', /* TODO make logo be media */
     cover_photo   TEXT DEFAULT 'placeholder_url', /* TODO make logo be media */
     FOREIGN KEY (creator) REFERENCES users (id)
+);
+
+CREATE TABLE project_has_media
+(
+    project_id              uuid,
+    media           TEXT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id,media)
 );
 
 CREATE TABLE themes

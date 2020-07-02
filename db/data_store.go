@@ -41,6 +41,10 @@ type projectProvider interface {
 	// Creator APIs
 
 	CreateProject(project *model.Project) (string, error)
+
+	CreateProjectMedia(projectID string, mediaURL string) error
+	UpdateCoverPhoto(projectID string, coverURL string) (string, error)
+	UpdateLogo(projectID string, logo string) (string, error)
 	RemoveProject(id string) error
 
 	// Admin APIs
@@ -51,10 +55,14 @@ type projectProvider interface {
 	AddTheme(themeName string, projectID string) error
 	RemoveTheme(themeName string, projectID string) error
 
+	CheckAdmin(projectID string, userID string) bool
+
+
 	// Public APIs
 
 	GetProject(id string) (*model.Project, error)
 	GetProjectStub(id string) (*model.ProjectStub, error)
+
 	GetProjMembers(id string) ([]model.User, error)
 }
 

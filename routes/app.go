@@ -13,15 +13,19 @@ import (
 type App struct {
 	router *mux.Router
 	store  *db.DataStore
+	// TODO: Add Google Cloud Storage
 	jwtMiddleware *jwtmiddleware.JWTMiddleware
 }
 
 type AppConfig struct {
 	DbUrl string
+	//ProjectID string
+	//BucketName string
 }
 
 func NewApp(config *AppConfig) *App {
 	store, err := postgres.NewPostgresDataStore(config.DbUrl)
+	// TODO: Create context and bucket instance?
 	if err != nil {
 		log.Println("Failed to connect to database")
 		log.Fatal(err)
@@ -48,6 +52,7 @@ func (app *App) RegisterRoutes() {
 	// app.RegisterProfileRoutes()
 	app.RegisterProjectRoutes()
 	app.RegisterThemeRoutes()
+	app.RegisterGoogleCloudRoutes()
 	app.RegisterDiscussionRoutes()
 }
 
