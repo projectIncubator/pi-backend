@@ -103,3 +103,8 @@ type Post struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
 }
+
+type SignInResponse struct {
+	UserID 	  string `json: "user_id"`
+	IsNewUser bool	 `json: "is_new_user"`
+}

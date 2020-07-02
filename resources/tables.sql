@@ -28,7 +28,7 @@ CREATE TABLE users
     last_name       TEXT NOT NULL,
     email           TEXT NOT NULL UNIQUE,
     image           TEXT DEFAULT 'placeholder_url',
-    profile_id      TEXT UNIQUE NOT NULL, /* TODO: set = to id if null*/
+    profile_id      TEXT UNIQUE, /* TODO: set = to id if null*/
     deactivated     BOOLEAN DEFAULT FALSE,
     banned          BOOLEAN DEFAULT FALSE
 );
