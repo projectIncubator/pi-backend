@@ -21,6 +21,13 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser) (string, error) {
 		return "", err
 	}
 
+	sqlStatement =
+		`UPDATE users SET profile_id = $1 WHERE id = $1 RETURNING id`
+	err = p.database.QueryRow(sqlStatement,id,).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+
 	return id, nil
 }
 func (p PostgresDBStore) LoginUser(user *model.IDUser) (string, error) {
@@ -222,7 +229,8 @@ func (p PostgresDBStore) UninterestedTheme(userID string, themeName string) erro
 // Public APIs
 
 func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
-	sqlStatement := `SELECT id, first_name, last_name, image, profile_id FROM users WHERE id=$1;`
+	sqlStatement :=
+		`SELECT id, first_name, last_name, image, profile_id FROM users WHERE id=$1 OR profile_id=$1;`
 	var user model.User
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -240,7 +248,8 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
-	sqlStatement := `SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
+	sqlStatement :=
+		`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1 OR profile_id=$1;`
 	var userProfile model.UserProfile
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -258,22 +267,24 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//People the user is following
-	sqlStatement = `SELECT COUNT(*)
-						FROM users, follows
-						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
+	sqlStatement =
+		`SELECT COUNT(*) 
+			FROM users, follows
+			WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
-	row = p.database.QueryRow(sqlStatement, id)
+	row = p.database.QueryRow(sqlStatement, userProfile.ID)
 	err = row.Scan(&userProfile.FollowingCount)
 	if err != nil {
 		return nil, err
 	}
 
 	//  followers of the user
-	sqlStatement = `SELECT COUNT(*)
-						FROM users, follows
-						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
+	sqlStatement =
+		`SELECT COUNT(*)
+			FROM users, follows
+			WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
-	row = p.database.QueryRow(sqlStatement, id)
+	row = p.database.QueryRow(sqlStatement, userProfile.ID)
 	err = row.Scan(&userProfile.FollowersCount)
 	if err != nil {
 		return nil, err
@@ -285,7 +296,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 						FROM interested
 						WHERE interested.user_id = $1;`
 
-	rows, err := p.database.Query(sqlStatement, id)
+	rows, err := p.database.Query(sqlStatement, userProfile.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -311,7 +322,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 						FROM contributing
 						WHERE contributing.user_id = $1;`
 
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, err = p.database.Query(sqlStatement, userProfile.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +348,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 						FROM projects
 						WHERE projects.creator = $1;`
 
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, err = p.database.Query(sqlStatement, userProfile.ID)
 	if err != nil {
 		return nil, err
 	}

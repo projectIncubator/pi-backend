@@ -44,7 +44,6 @@ func (app *App) CreateTheme(w http.ResponseWriter, r *http.Request) {
 	//_ = json.NewEncoder(w).Encode(newTheme)
 	return
 }
-
 func (app *App) GetTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]
 
@@ -61,7 +60,6 @@ func (app *App) GetTheme(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(theme) // <- Sending the theme as a json {id: ..., Title: ..., Stage ... , .. }
 }
-
 func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 	var updatedTheme model.Theme
 	reqBody, err := ioutil.ReadAll(r.Body)
@@ -84,7 +82,6 @@ func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(name) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
-
 //func (app *App) GetProjectsWithTheme(w http.ResponseWriter, r *http.Request) {
 //	themeName := mux.Vars(r)["id"]
 //
@@ -101,7 +98,6 @@ func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 //	w.WriteHeader(http.StatusOK)
 //	//_ = json.NewEncoder(w).Encode(projects) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 //}
-
 func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]
 
