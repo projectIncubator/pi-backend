@@ -1,6 +1,9 @@
 package postgres
 
-import "go-api/model"
+import (
+	"go-api/model"
+	"log"
+)
 
 // Creator APIs
 
@@ -99,27 +102,7 @@ func (p PostgresDBStore) RemoveMember(projectID string, userID string) error {
 	}
 	return nil
 }
-func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 
-	sqlStatement :=
-		`UPDATE contributing
-				SET is_admin = NOT is_admin 
-				WHERE project_id = $1 AND user_id = $2
-				RETURNING project_id, user_id;`
-	var _projectID string
-	var _userID string
-	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
-	if err != nil {
-		return err
-	}
-	if _projectID != projectID {
-		return CreateError
-	}
-	if _userID != userID {
-		return CreateError
-	}
-	return nil
-}
 func (p PostgresDBStore) AddTheme(themeName string, projectID string) error {
 
 	sqlStatement := `INSERT INTO project_has_theme(theme_name, project_id) VALUES ($1, $2)
@@ -181,6 +164,21 @@ func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
 	}
 	return members, nil
 }
+
+func (p PostgresDBStore) CreateProjectMedia(projectID string, mediaURL string) error {
+	sqlStatement :=
+		`INSERT INTO project_has_media(project_id, media) VALUES ($1, $2) RETURNING project_id, media`
+	var returnedID, returnedURL string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		mediaURL,
+	).Scan(&returnedID, &returnedURL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 	sqlStatement := `SELECT id, title, state, logo FROM projects WHERE id=$1;`
 	var projectStub model.ProjectStub
@@ -232,6 +230,7 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 	}
 
 	return &projectStub, nil
+
 }
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	var project model.Project
@@ -252,7 +251,6 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	//Fill in the admins array
 	sqlStatement = `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id 
 							FROM users, contributing
@@ -294,13 +292,13 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		}
 		project.Discussion = append(project.Discussion, discussion)
 	}
-
 	// Fill in the themes array
 	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
 	rows, err = p.database.Query(sqlStatement, id)
 	for rows.Next() {
+
 		var theme model.Theme
 		if err = rows.Scan(
 			&theme.Name,
@@ -309,9 +307,9 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 		); err!= nil {
 			return nil, err
 		}
+
 		project.Themes = append(project.Themes, theme)
 	}
-
 	// Fill in the sidebar array
 	sqlStatement = `SELECT module_type, content
 						FROM sidebar_modules
@@ -352,4 +350,110 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	return &project, nil
 }
 
+func (p PostgresDBStore) UpdateCoverPhoto(projectID string, coverURL string) (string, error) {
+	sqlStatement :=
+		`UPDATE projects
+				SET cover_photo = $2
+				WHERE id = $1
+				RETURNING id;`
+	var _id string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		coverURL,
+	).Scan(&_id)
+	if err != nil {
+		return "", err
+	}
+	if _id != projectID {
+		return "", CreateError
+	}
+	return projectID, nil
+}
 
+func (p PostgresDBStore) UpdateLogo(projectID string, logo string) (string, error) {
+	sqlStatement :=
+		`UPDATE projects
+				SET logo = $2
+				WHERE id = $1
+				RETURNING id;`
+	var _id string
+	err := p.database.QueryRow(sqlStatement,
+		projectID,
+		logo,
+	).Scan(&_id)
+	if err != nil {
+		return "", err
+	}
+	if _id != projectID {
+		return "", CreateError
+	}
+	return projectID, nil
+}
+
+func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
+	//Make sure the user is not changing the only admin to non-admin
+	_sqlStatement := `SELECT COUNT(*) FROM contributing WHERE is_admin = true;`
+	var _count int
+	_err := p.database.QueryRow(_sqlStatement).Scan(&_count)
+	if _err != nil {
+		return _err
+	}
+	if _count == 1 {
+		_sqlStatement:= `SELECT user_id FROM contributing WHERE is_admin = true;`
+		var _userID string
+		_err = p.database.QueryRow(_sqlStatement).Scan(&_userID)
+		if _err != nil {
+			return _err
+		}
+		if _userID == userID {
+			log.Printf("App.ToggleProejct - there must be at least one admin")
+			return CreateError
+		}
+	}
+	sqlStatement :=
+		`UPDATE contributing
+				SET is_admin = NOT is_admin 
+				WHERE project_id = $1 AND user_id = $2
+				RETURNING project_id, user_id;`
+	var _projectID string
+	var _userID string
+	err := p.database.QueryRow(sqlStatement, projectID, userID).Scan(&_projectID, &_userID)
+	if err != nil {
+		return err
+	}
+	if _projectID != projectID {
+		return CreateError
+	}
+	if _userID != userID {
+		return CreateError
+	}
+	return nil
+}
+
+func (p PostgresDBStore) CheckAdmin(projectID string, userID string) bool {
+	type _UserID struct {
+		ID        string `json:"id"`
+	}
+	var userTK _UserID
+	userTK.ID = ""
+	sqlStatement := `SELECT user_id FROM contributing WHERE project_id = $1 AND user_id = $2 AND is_admin = true`
+
+	row := p.database.QueryRow(
+		sqlStatement,
+		projectID,
+		userID,
+		)
+	err := row.Scan(
+		&userTK.ID,
+	)
+	if err != nil {
+		return false
+	}
+	if userTK.ID == "" {
+		return false
+	} else {
+		return true
+	}
+
+
+}
