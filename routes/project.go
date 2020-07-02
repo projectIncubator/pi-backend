@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 )
 
 func (app *App) RegisterProjectRoutes() {
@@ -30,6 +31,9 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}/stub", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")
 
+	// TEST
+	app.router.HandleFunc("/test/test", app.Test).Methods("GET")
+
 	// TODO APIs
 
 	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.CreateProjPage).Methods("POST")
@@ -40,6 +44,17 @@ func (app *App) RegisterProjectRoutes() {
 }
 
 // Creator APIs
+
+func (app *App) Test(w http.ResponseWriter, r *http.Request) {
+
+	data, err := httputil.DumpRequest(r, false)
+	if err != nil {
+		log.Fatal("Error")
+	}
+	json.NewEncoder(w).Encode(string(data))
+
+	return
+}
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var newProject model.Project

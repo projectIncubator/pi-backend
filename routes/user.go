@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
@@ -12,8 +13,16 @@ import (
 func (app *App) RegisterUserRoutes() {
 
 	// Private APIs
-
-	app.router.HandleFunc("/users", app.CreateUser).Methods("POST")
+	app.router.Handle("/api/private", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			message := "Hello from a private endpoint! You need to be authenticated to see this."
+			json.NewEncoder(w).Encode(message)
+			w.WriteHeader(http.StatusOK)
+		}))))
+	app.router.Handle("/users", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(http.HandlerFunc(app.CreateUser)))).Methods("POST")
 	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.UpdateProject),USER)).Methods("PATCH")
 	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.DeleteUser),USER)).Methods("DELETE")
 

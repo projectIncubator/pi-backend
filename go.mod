@@ -7,7 +7,11 @@ require (
 	github.com/gabriel-vasile/mimetype v1.1.0
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/uuid v1.1.1
-	github.com/gorilla/mux v1.7.3
+	github.com/auth0/go-jwt-middleware v0.0.0-20200507191422-d30d7b9ece63
+	github.com/codegangsta/negroni v1.0.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/googollee/go-socket.io v1.4.3 // indirect
+	github.com/gorilla/mux v1.7.4
 	github.com/lib/pq v1.3.0
 	github.com/rs/cors v1.7.0
 	golang.org/x/mod v0.3.0 // indirect

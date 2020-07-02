@@ -1,6 +1,7 @@
 package routes
 
 import (
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"go-api/db"
@@ -13,6 +14,7 @@ type App struct {
 	router *mux.Router
 	store  *db.DataStore
 	// TODO: Add Google Cloud Storage
+	jwtMiddleware *jwtmiddleware.JWTMiddleware
 }
 
 type AppConfig struct {
@@ -31,6 +33,7 @@ func NewApp(config *AppConfig) *App {
 	return &App{
 		router: mux.NewRouter().StrictSlash(true),
 		store:  store,
+		jwtMiddleware: InitAuthMiddleware(),
 	}
 }
 
