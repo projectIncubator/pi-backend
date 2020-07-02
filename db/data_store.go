@@ -20,6 +20,7 @@ type Closable interface {
 
 type userProvider interface {
 	CreateUser(user *model.IDUser) (string, error)
+	LoginUser(user *model.IDUser) (string, error)
 	GetUser(id string) (*model.User, error)
 	GetUserProfile(id string) (*model.UserProfile, error)
 	UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error)
