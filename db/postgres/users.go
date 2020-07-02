@@ -23,6 +23,21 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser) (string, error) {
 
 	return id, nil
 }
+func (p PostgresDBStore) LoginUser(user *model.IDUser) (string, error) {
+	sqlStatement :=
+		`SELECT id FROM users WHERE id_token = $1`
+	var id string
+	err := p.database.QueryRow(sqlStatement,
+		user.IDToken,
+	).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
 func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
