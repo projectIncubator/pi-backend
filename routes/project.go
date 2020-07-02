@@ -2,37 +2,48 @@ package routes
 
 import (
 	"encoding/json"
+	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/httputil"
 )
 
 func (app *App) RegisterProjectRoutes() {
 
 	// Creator APIs
 
-	app.router.HandleFunc("/projects", app.CreateProject).Methods("POST")
-	app.router.Handle("/projects/{proj_id}", app.middleware(http.HandlerFunc(app.DeleteProject),CREATOR)).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
+	app.router.Handle("/projects", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(http.HandlerFunc(app.CreateProject)))).Methods("POST")
+	app.router.Handle("/projects/{proj_id}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteProject),CREATOR)))).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
 	// ... + Admins APIs
 
-	app.router.Handle("/projects/{proj_id}", app.middleware(http.HandlerFunc(app.UpdateProject),USER)).Methods("PATCH")
-	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", app.middleware(http.HandlerFunc(app.AddTheme),ADMIN)).Methods("POST")
-	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", app.middleware(http.HandlerFunc(app.RemoveTheme),ADMIN)).Methods("DELETE")
-	app.router.Handle("/projects/{proj_id}/members/{user_id}", app.middleware(http.HandlerFunc(app.DeleteMember),ADMIN)).Methods("DELETE")
-	app.router.Handle("/projects/{proj_id}/members/{user_id}", app.middleware(http.HandlerFunc(app.ToggleAdmin),ADMIN)).Methods("PATCH")
+	app.router.Handle("/projects/{proj_id}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateProject),USER)))).Methods("PATCH")
+	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.AddTheme),ADMIN)))).Methods("POST")
+	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.RemoveTheme),ADMIN)))).Methods("DELETE")
+	app.router.Handle("/projects/{proj_id}/members/{user_id}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteMember),ADMIN)))).Methods("DELETE")
+	app.router.Handle("/projects/{proj_id}/members/{user_id}", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.ToggleAdmin),ADMIN)))).Methods("PATCH")
 
 	// Public APIs
 
 	app.router.Handle("/projects/{id}", http.HandlerFunc(app.GetProject)).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/stub", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")
-
-	// TEST
-	app.router.HandleFunc("/test/test", app.Test).Methods("GET")
 
 	// TODO APIs
 
@@ -44,17 +55,6 @@ func (app *App) RegisterProjectRoutes() {
 }
 
 // Creator APIs
-
-func (app *App) Test(w http.ResponseWriter, r *http.Request) {
-
-	data, err := httputil.DumpRequest(r, false)
-	if err != nil {
-		log.Fatal("Error")
-	}
-	json.NewEncoder(w).Encode(string(data))
-
-	return
-}
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	var newProject model.Project
