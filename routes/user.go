@@ -13,51 +13,30 @@ import (
 func (app *App) RegisterUserRoutes() {
 
 	// Private APIs
-	app.router.Handle("/test/private", negroni.New(
+	app.router.Handle("/api/private", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			message := "Hello from a private endpoint! You need to be authenticated to see this."
 			json.NewEncoder(w).Encode(message)
 			w.WriteHeader(http.StatusOK)
 		}))))
-
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(http.HandlerFunc(app.CreateUser)))).Methods("POST")
-	app.router.Handle("/users", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateProject),USER)))).Methods("PATCH")
-	app.router.Handle("/users", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteUser),USER)))).Methods("DELETE")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.UpdateProject),USER)).Methods("PATCH")
+	app.router.Handle("/users", app.middleware(http.HandlerFunc(app.DeleteUser),USER)).Methods("DELETE")
 
-	app.router.Handle("/follows/{followed_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.FollowUser),USER)))).Methods("POST")
-	app.router.Handle("/follows/{followed_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UnfollowUser),USER)))).Methods("DELETE")
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.FollowUser),USER)).Methods("POST")
+	app.router.Handle("/follows/{followed_id}", app.middleware(http.HandlerFunc(app.UnfollowUser),USER)).Methods("DELETE")
 
-	app.router.Handle("/interested/{project_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedProject),USER)))).Methods("POST")
-	app.router.Handle("/interested/{project_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedProject),USER)))).Methods("DELETE")
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.InterestedProject),USER)).Methods("POST")
+	app.router.Handle("/interested/{project_id}", app.middleware(http.HandlerFunc(app.UninterestedProject),USER)).Methods("DELETE")
 
-	app.router.Handle("/interested/{theme_name}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedTheme),USER)))).Methods("POST")
-	app.router.Handle("/interested/{theme_name}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedTheme),USER)))).Methods("DELETE")
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.InterestedTheme),USER)).Methods("POST")
+	app.router.Handle("/interested/{theme_name}", app.middleware(http.HandlerFunc(app.UninterestedTheme),USER)).Methods("DELETE")
 
-	app.router.Handle("/contributes/{project_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.JoinProject),USER)))).Methods("POST")
-	app.router.Handle("/contributes/{project_id}", negroni.New(
-		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.QuitProject),USER)))).Methods("DELETE")
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.JoinProject),USER)).Methods("POST")
+	app.router.Handle("/contributes/{project_id}", app.middleware(http.HandlerFunc(app.QuitProject),USER)).Methods("DELETE")
 
 	// Public APIs
 
@@ -70,12 +49,7 @@ func (app *App) RegisterUserRoutes() {
 // Private APIs
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
-
-	var response model.SignInResponse
-	response.IsNewUser = false
-
 	var newUser model.IDUser
-
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
 		log.Printf("App.CreateUser - error reading request body %v", err)
@@ -88,23 +62,14 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	id, err := app.store.UserProvider.LoginUser(&newUser)
+	id, err := app.store.UserProvider.CreateUser(&newUser)
 	if err != nil {
-
-		id, err = app.store.UserProvider.CreateUser(&newUser)
-		if err != nil {
-			log.Printf("App.CreateUser - error creating user %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		response.IsNewUser = true
-
+		log.Printf("App.CreateUser - error creating user %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
-
-	response.UserID = id
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(id)
 }
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
