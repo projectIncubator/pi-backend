@@ -13,6 +13,13 @@ import (
 func (app *App) RegisterUserRoutes() {
 
 	// Private APIs
+	app.router.Handle("/api/private", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			message := "Hello from a private endpoint! You need to be authenticated to see this."
+			json.NewEncoder(w).Encode(message)
+			w.WriteHeader(http.StatusOK)
+		}))))
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(http.HandlerFunc(app.CreateUser)))).Methods("POST")

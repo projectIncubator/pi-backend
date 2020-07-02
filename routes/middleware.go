@@ -35,7 +35,7 @@ func InitAuthMiddleware() *jwtmiddleware.JWTMiddleware {
 				return token, errors.New("Invalid audience.")
 			}
 			// Verify 'iss' claim
-			iss := "https://dev-mxz0v43z.auth0.com"
+			iss := "https://dev-mxz0v43z.auth0.com/api/v2/"
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
 				return token, errors.New("Invalid issuer.")
