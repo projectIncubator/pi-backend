@@ -1,7 +1,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- 1. Add your table to drop if exists
-
+DROP TABLE IF EXISTS task_link_discussion;
+DROP TABLE IF EXISTS task_contributors;
+DROP TABLE IF EXISTS tasks;
 DROP TABLE IF EXISTS project_has_theme;
 DROP TABLE IF EXISTS user_interested_theme;
 DROP TABLE IF EXISTS themes;
@@ -99,6 +101,41 @@ CREATE TABLE posts
     FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
     FOREIGN KEY (creator)  REFERENCES users(id),
     PRIMARY KEY (proj_id, disc_num, post_num)
+);
+
+CREATE TABLE tasks
+(
+    proj_id     uuid,
+    task_num    SERIAL,
+    parent_proj uuid,
+    parent_id   INTEGER,
+    task_depth  TEXT DEFAULT 'milestone',
+    creation_date TIMESTAMP DEFAULT current_timestamp,
+    status      TEXT DEFAULT 'todo',
+    description TEXT NOT NULL,
+    FOREIGN KEY (parent_proj, parent_id) REFERENCES tasks(parent_proj, task_num),
+    FOREIGN KEY (proj_id) REFERENCES projects(id),
+    PRIMARY KEY (proj_id, task_num)
+);
+
+CREATE TABLE task_link_discussion
+(
+    proj_id     uuid,
+    disc_num    INTEGER,
+    task_num    INTEGER,
+    FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
+    FOREIGN KEY (proj_id, task_num) REFERENCES tasks(proj_id, task_num),
+    PRIMARY KEY (proj_id, disc_num, task_num)
+);
+
+CREATE TABLE task_contributors
+(
+    user_id     uuid,
+    proj_id     uuid,
+    task_num    INTEGER,
+    FOREIGN KEY (user_id, proj_id) REFERENCES contributing(user_id, project_id),
+    FOREIGN KEY (proj_id, task_num) REFERENCES tasks(proj_id, task_num),
+    PRIMARY KEY (user_id, proj_id, task_num)
 );
 
 CREATE TABLE discussion_has_media
