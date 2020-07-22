@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"go-api/model"
-	"log"
 )
 
 // Private APIs
@@ -229,9 +228,17 @@ func (p PostgresDBStore) UninterestedTheme(userID string, themeName string) erro
 // Public APIs
 
 func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
-	sqlStatement :=
-		`SELECT id, first_name, last_name, image, profile_id FROM users WHERE id=$1 OR profile_id=$1;`
+
 	var user model.User
+
+	var sqlStatement string
+
+	if IsValidUUID(id) {
+		sqlStatement = `SELECT id, first_name, last_name, image, profile_id FROM users WHERE id=$1;`
+	} else {
+		sqlStatement = `SELECT id, first_name, last_name, image, profile_id FROM users WHERE profile_id=$1;`
+	}
+
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&user.ID,
@@ -241,16 +248,24 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 		&user.ProfileID,
 	)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
 	return &user, nil
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
-	sqlStatement :=
-		`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1 OR profile_id=$1;`
 	var userProfile model.UserProfile
+	var sqlStatement string
+
+	if IsValidUUID(id) {
+		sqlStatement =
+			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
+	} else {
+		sqlStatement =
+			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE profile_id=$1`
+	}
+
+
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&userProfile.ID,
@@ -266,6 +281,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	//People the user is following
 	sqlStatement =
 		`SELECT COUNT(*) 
@@ -289,7 +305,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 	if err != nil {
 		return nil, err
 	}
-
 
 	//Fill in the interested table
 	sqlStatement = `SELECT project_id
