@@ -33,7 +33,6 @@ CREATE TABLE users
     banned          BOOLEAN DEFAULT FALSE
 );
 
-
 CREATE TABLE projects
 (
     id            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -141,8 +140,6 @@ CREATE TABLE follows
     FOREIGN KEY (followed_id) REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (follower_id,followed_id)
 );
-
-
 
 CREATE TABLE contributing
 (

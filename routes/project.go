@@ -57,7 +57,7 @@ func (app *App) RegisterProjectRoutes() {
 // Creator APIs
 
 func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
-	var newProject model.Project
+	newProject := model.NewProject()
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
 		log.Printf("App.CreateProject - error reading request body %v", err)
@@ -103,7 +103,7 @@ func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 
 func (app *App) UpdateProject(w http.ResponseWriter, r *http.Request) {
 
-	var updatedProject model.Project
+	updatedProject := model.NewProject()
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -251,7 +251,7 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 func (app *App) GetProjMembers(w http.ResponseWriter, r *http.Request) {
-	var members []model.User
+
 	projectID := mux.Vars(r)["id"]
 
 	if projectID == "" {

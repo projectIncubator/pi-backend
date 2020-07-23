@@ -229,7 +229,7 @@ func (p PostgresDBStore) UninterestedTheme(userID string, themeName string) erro
 
 func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 
-	var user model.User
+	user := model.NewUser()
 
 	var sqlStatement string
 
@@ -254,7 +254,7 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 
-	var userProfile model.UserProfile
+	userProfile := model.NewUserProfile()
 	var sqlStatement string
 
 	if IsValidUUID(id) {
@@ -398,7 +398,7 @@ func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
         return nil, err
     }
     for rows.Next() {
-        var user model.User
+        user := model.NewUser()
 
         if err := rows.Scan(
             &user.ID,
@@ -425,7 +425,7 @@ func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
 		return nil, err
 	}
 	for rows.Next() {
-		var user model.User
+		user := model.NewUser()
 
 		if err := rows.Scan(
 			&user.ID,

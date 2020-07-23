@@ -31,6 +31,10 @@ type User struct {
 	Image     string `json:"image"`
 	ProfileID string `json:"profile_id"`
 }
+func NewUser() User {
+	user := User{}
+	return user
+}
 
 type UserProfile struct {
 	User
@@ -45,25 +49,38 @@ type UserProfile struct {
 	Created          []ProjectStub `json:"created"`      // ^
 	InterestedThemes []Theme       `json:"interested_themes"`
 }
+func NewUserProfile() UserProfile {
+	userProfile := UserProfile{}
+	userProfile.Interested = []ProjectStub{}
+	userProfile.Contributing = []ProjectStub{}
+	userProfile.Created = []ProjectStub{}
+	userProfile.InterestedThemes = []Theme{}
+	return userProfile
+}
 
 // TODO: Make project state enum not string
 
 type ProjectStub struct {
 	ID    			string  `json:"id"`
 	Title 			string  `json:"title"`
-	State 			string  `json:"state"`
+	State 			string  `json:"status"`
 	Logo  			string  `json:"logo"`
 	Themes 			[]Theme `json:"themes"`
-	MemberCount		int `json:"member_count"`
-	InterestedCount int `json:"interested_count" `
+	MemberCount		int 	`json:"member_count"`
+	InterestedCount int 	`json:"interested_count"`
+	StartDate		time.Time `json:"start_date"`
+	EndDate    		NullTime  `json:"end_date"`
+	OneLiner   		string    `json:"oneliner"`
+}
+func NewProjectStub() ProjectStub {
+	projectStub := ProjectStub{}
+	projectStub.Themes = []Theme{}
+	return projectStub
 }
 
 type Project struct {
 	ProjectStub
 	Creator    string    		`json:"user_id"`
-	StartDate  time.Time 		`json:"start_date"`
-	EndDate    NullTime 		`json:"end_date"`
-	OneLiner   string    		`json:"oneliner"`
 	Discussion []DiscussionOut  `json:"discussion_id"`
 	Admins     []User    		`json:"admins"`
 	CoverPhoto string   		`json:"coverphoto"`
@@ -71,10 +88,22 @@ type Project struct {
 	//	Media       []string  `json:"media"`
 	//	Modules     []ProjectModule `json:"projectModules"`
 }
+func NewProject() Project {
+	project := Project{}
+	project.ProjectStub = NewProjectStub()
+	project.Discussion = []DiscussionOut{}
+	project.Admins = []User{}
+	project.SideBar = []SideBarModule{}
+	return project
+}
 
 type SideBarModule struct {
 	Type        string `json:"type"`
 	Content 	string `json:"content"`
+}
+func NewSideBarModule() SideBarModule {
+	sideBarModule := SideBarModule{}
+	return sideBarModule
 }
 
 type Theme struct {
@@ -82,10 +111,18 @@ type Theme struct {
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 }
+func NewTheme() Theme {
+	theme := Theme{}
+	return theme
+}
 
 //TODO: this will be returned with filtered/algorithm-ed list of best project results
 type SearchResults struct {
 	//BestResults []ProjectStub `json:"results"`
+}
+func NewSearchResults() SearchResults {
+	searchResults := SearchResults{}
+	return searchResults
 }
 
 type DiscussionOut struct {
@@ -98,13 +135,26 @@ type DiscussionOut struct {
 	Closed      bool
 	Media 		[]string
 }
+func NewDiscussionOut() DiscussionOut {
+	discussionOut := DiscussionOut{}
+	discussionOut.Media = []string{}
+	return discussionOut
+}
 
 type Post struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
 }
+func NewPost() Post {
+	post := Post{}
+	return post
+}
 
 type SignInResponse struct {
 	UserID 	  string `json: "user_id"`
 	IsNewUser bool	 `json: "is_new_user"`
+}
+func NewSignInResponse() SignInResponse {
+	signInResponse := SignInResponse{}
+	return signInResponse
 }

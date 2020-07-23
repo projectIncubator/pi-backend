@@ -71,7 +71,7 @@ func (app *App) RegisterUserRoutes() {
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	var response model.SignInResponse
+	response := model.NewSignInResponse()
 	response.IsNewUser = false
 
 	var newUser model.IDUser
@@ -108,7 +108,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	var updatedUser model.UserProfile
+	updatedUser := model.NewUserProfile()
 
 	userID := r.Context().Value("user_id").(AuthWraper).id
 
