@@ -26,7 +26,7 @@ func (p PostgresDBStore) CreateTheme(theme *model.Theme) error {
 func (p PostgresDBStore) GetTheme(themeName string) (*model.Theme, error) {
 	sqlStatement := `SELECT name, logo, description FROM themes WHERE name=$1;`
 
-	var theme model.Theme
+	theme := model.NewTheme()
 	row := p.database.QueryRow(sqlStatement, themeName)
 	err := row.Scan(
 		&theme.Name,

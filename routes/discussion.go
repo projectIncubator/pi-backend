@@ -16,7 +16,7 @@ func (app *App) RegisterDiscussionRoutes() {
 }
 
 func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
-	var newDiscussion model.DiscussionIn
+	newDiscussion := model.NewDiscussionIn()
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
 		log.Printf("App.CreateProject - error reading request body %v", err)

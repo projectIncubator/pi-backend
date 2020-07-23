@@ -20,7 +20,7 @@ func (app *App) RegisterThemeRoutes() {
 }
 
 func (app *App) CreateTheme(w http.ResponseWriter, r *http.Request) {
-	var newTheme model.Theme
+	newTheme := model.NewTheme()
 	reqBody, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
 		log.Printf("App.CreateProject - error reading request body %v", err)
@@ -61,7 +61,7 @@ func (app *App) GetTheme(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(theme) // <- Sending the theme as a json {id: ..., Title: ..., Stage ... , .. }
 }
 func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
-	var updatedTheme model.Theme
+	updatedTheme := model.NewTheme()
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("App.UpdateProject - could not read r.Body with ioutil")

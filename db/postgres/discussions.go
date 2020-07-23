@@ -40,7 +40,7 @@ func (p PostgresDBStore) CreateDiscussion(proj_id string, discussion *model.Disc
 func (p PostgresDBStore) GetDiscussion(proj_id string, discNum string) (model.DiscussionOut, error) {
 	sqlStatement := `SELECT * FROM discussions WHERE proj_id=$1 AND disc_num=$2;`
 
-	var discussion model.DiscussionOut
+	discussion := model.NewDiscussionOut()
 	row := p.database.QueryRow(sqlStatement, proj_id, discNum)
 	err := row.Scan(
 		&discussion.ProjID,

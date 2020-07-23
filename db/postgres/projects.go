@@ -150,7 +150,7 @@ func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
 		return nil, err
 	}
 	for rows.Next() {
-		var user model.User
+		user := model.NewUser()
 		if err := rows.Scan(
 			&user.ID,
 			&user.FirstName,
@@ -180,14 +180,19 @@ func (p PostgresDBStore) CreateProjectMedia(projectID string, mediaURL string) e
 }
 
 func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
-	sqlStatement := `SELECT id, title, state, logo FROM projects WHERE id=$1;`
-	var projectStub model.ProjectStub
+
+	projectStub := model.NewProjectStub()
+
+	sqlStatement := `SELECT id, title, state, logo, start_date, end_date, oneliner FROM projects WHERE id=$1;`
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&projectStub.ID,
 		&projectStub.Title,
 		&projectStub.State,
 		&projectStub.Logo,
+		&projectStub.StartDate,
+		&projectStub.EndDate,
+		&projectStub.OneLiner,
 		)
 	if err != nil {
 		return nil, err
@@ -233,7 +238,7 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 
 }
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
-	var project model.Project
+	project := model.NewProject()
 
 	sqlStatement := `SELECT id, title, state, creator, start_date, end_date, oneliner, logo, cover_photo FROM projects WHERE id=$1;`
 	row := p.database.QueryRow(sqlStatement, id)
