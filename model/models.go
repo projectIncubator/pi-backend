@@ -83,6 +83,14 @@ func NewUserProfile() UserProfile {
 	userProfile.InterestedThemes = []Theme{}
 	return userProfile
 }
+func NewUserProfile() UserProfile {
+	userProfile := UserProfile{}
+	userProfile.Interested = []ProjectStub{}
+	userProfile.Contributing = []ProjectStub{}
+	userProfile.Created = []ProjectStub{}
+	userProfile.InterestedThemes = []Theme{}
+	return userProfile
+}
 
 // TODO: Make project state enum not string
 
