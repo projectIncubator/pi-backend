@@ -6,41 +6,86 @@ import (
 
 // Private APIs
 
-func (p PostgresDBStore) CreateUser(user *model.IDUser) (string, error) {
+func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
+
 	sqlStatement :=
-		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) RETURNING id`
-	var id string
+		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) 
+			RETURNING id, first_name, last_name, email, image, deactivated, banned, bio`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
 		user.FirstName,
 		user.LastName,
 		user.Email,
-	).Scan(&id)
+	).Scan(
+		&userInfo.ID,
+		&userInfo.FirstName,
+		&userInfo.LastName,
+		&userInfo.Email,
+		&userInfo.Image,
+		&userInfo.Deactivated,
+		&userInfo.Banned,
+		&userInfo.Bio,
+	)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	sqlStatement =
-		`UPDATE users SET profile_id = $1 WHERE id = $1 RETURNING id`
-	err = p.database.QueryRow(sqlStatement,id,).Scan(&id)
+		`UPDATE users SET profile_id = $1 WHERE id = $1 RETURNING profile_id`
+	err = p.database.QueryRow(sqlStatement,userInfo.ID).Scan(&userInfo.ProfileID)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
-func (p PostgresDBStore) LoginUser(user *model.IDUser) (string, error) {
+func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
 	sqlStatement :=
-		`SELECT id FROM users WHERE id_token = $1`
-	var id string
+		`SELECT id, profile_id, first_name, last_name, email, image, deactivated, banned, bio
+			FROM users WHERE id_token = $1`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
-	).Scan(&id)
+	).Scan(
+		&userInfo.ID,
+		&userInfo.ProfileID,
+		&userInfo.FirstName,
+		&userInfo.LastName,
+		&userInfo.Email,
+		&userInfo.Image,
+		&userInfo.Deactivated,
+		&userInfo.Banned,
+		&userInfo.Bio,
+		)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return id, nil
+	userInfo.Following, err = p.GetUserFollows(userInfo.ID)
+	if err != nil {
+		return err
+	}
+	userInfo.Followers, err = p.GetUserFollowers(userInfo.ID)
+	if err != nil {
+		return err
+	}
+	userInfo.Interested, err = p.GetUserInterested(userInfo.ID)
+	if err != nil {
+		return err
+	}
+	userInfo.Contributing, err = p.GetUserContributing(userInfo.ID)
+	if err != nil {
+		return err
+	}
+	userInfo.Created, err = p.GetUserCreated(userInfo.ID)
+	if err != nil {
+		return err
+	}
+	userInfo.InterestedThemes, err = p.GetUserInterestedThemes(userInfo.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 
@@ -306,84 +351,18 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 
-	//Fill in the interested table
-	sqlStatement = `SELECT project_id
-						FROM interested
-						WHERE interested.user_id = $1;`
-
-	rows, err := p.database.Query(sqlStatement, userProfile.ID)
+	//Fill in interested array
+	userProfile.Interested, err = p.GetUserInterested(userProfile.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	for rows.Next() {
-		var proj_id string
-
-		if err := rows.Scan(
-			&proj_id,
-		); err != nil {
-			return nil, err
-		}
-
-		proj, err := p.GetProjectStub(proj_id)
-		if err != nil {
-			return nil, err
-		}
-
-		userProfile.Interested = append(userProfile.Interested, *proj)
-	}
-
-	sqlStatement = `SELECT project_id
-						FROM contributing
-						WHERE contributing.user_id = $1;`
-
-	rows, err = p.database.Query(sqlStatement, userProfile.ID)
+	//Fill in contributing array
+	userProfile.Contributing, err = p.GetUserContributing(userProfile.ID)
 	if err != nil {
 		return nil, err
 	}
-
-	for rows.Next() {
-		var proj_id string
-
-		if err := rows.Scan(
-			&proj_id,
-		); err != nil {
-			return nil, err
-		}
-
-		proj, err := p.GetProjectStub(proj_id)
-		if err != nil {
-			return nil, err
-		}
-
-		userProfile.Contributing = append(userProfile.Contributing, *proj)
-	}
-
-	sqlStatement = `SELECT id
-						FROM projects
-						WHERE projects.creator = $1;`
-
-	rows, err = p.database.Query(sqlStatement, userProfile.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		var proj_id string
-
-		if err := rows.Scan(
-			&proj_id,
-		); err != nil {
-			return nil, err
-		}
-
-		proj, err := p.GetProjectStub(proj_id)
-		if err != nil {
-			return nil, err
-		}
-
-		userProfile.Created = append(userProfile.Created, *proj)
-	}
+	//Fill in created array
+	userProfile.Created, err = p.GetUserCreated(userProfile.ID)
 
 	return &userProfile, nil
 }
@@ -442,3 +421,126 @@ func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
 	return follows, nil
 }
 
+// Helpers
+
+func (p PostgresDBStore) GetUserInterested(id string) ([]model.ProjectStub, error) {
+	projects := []model.ProjectStub{}
+
+	sqlStatement := `SELECT project_id
+						FROM interested
+						WHERE interested.user_id = $1;`
+
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var proj_id string
+
+		if err := rows.Scan(
+			&proj_id,
+		); err != nil {
+			return nil, err
+		}
+
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, *proj)
+	}
+
+	return projects, err
+}
+func (p PostgresDBStore) GetUserContributing(id string) ([]model.ProjectStub, error) {
+	projects := []model.ProjectStub{}
+
+	sqlStatement := `SELECT project_id
+						FROM contributing
+						WHERE contributing.user_id = $1;`
+
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var proj_id string
+
+		if err := rows.Scan(
+			&proj_id,
+		); err != nil {
+			return nil, err
+		}
+
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, *proj)
+	}
+
+	return projects, err
+}
+func (p PostgresDBStore) GetUserCreated(id string) ([]model.ProjectStub, error) {
+
+	projects := []model.ProjectStub{}
+
+	sqlStatement := `SELECT id
+						FROM projects
+						WHERE projects.creator = $1;`
+
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var proj_id string
+
+		if err := rows.Scan(
+			&proj_id,
+		); err != nil {
+			return nil, err
+		}
+
+		proj, err := p.GetProjectStub(proj_id)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, *proj)
+	}
+	return projects, err
+}
+func (p PostgresDBStore) GetUserInterestedThemes(id string) ([]model.Theme, error) {
+	themes := []model.Theme{}
+
+	sqlStatement :=  `SELECT name, logo, description FROM themes, user_interested_theme
+						WHERE user_interested_theme.user_id = $1 
+						AND user_interested_theme.theme_name = themes.name`
+
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		theme := model.NewTheme()
+
+		if err := rows.Scan(
+			&theme.Name,
+			&theme.Logo,
+			&theme.Description,
+		); err != nil {
+			return nil, err
+		}
+
+		themes = append(themes, theme)
+	}
+
+	return themes, nil
+}

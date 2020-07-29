@@ -30,7 +30,6 @@ func NewIDUser() IDUser {
 	return idUser
 }
 
-
 type DiscussionIn struct {
 	UserID		string `json:"creator"`
 	Title		string `json:"title"`
