@@ -71,8 +71,8 @@ func (app *App) RegisterUserRoutes() {
 
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	response := model.NewSignInResponse()
-	response.IsNewUser = false
+	userInfo:= model.NewUserSessionInfo()
+	userInfo.IsNewUser = false
 
 	var newUser model.IDUser
 
@@ -89,22 +89,20 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.store.UserProvider.LoginUser(&newUser)
+	err = app.store.UserProvider.LoginUser(&newUser, &userInfo)
 	if err != nil {
-
-		id, err = app.store.UserProvider.CreateUser(&newUser)
+		err = app.store.UserProvider.CreateUser(&newUser, &userInfo)
 		if err != nil {
 			log.Printf("App.CreateUser - error creating user %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		response.IsNewUser = true
+		userInfo.IsNewUser = true
 
 	}
 
-	response.UserID = id
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(userInfo)
 }
 func (app *App) UpdateUser(w http.ResponseWriter, r *http.Request) {
 

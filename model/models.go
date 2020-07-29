@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"time"
 )
@@ -24,6 +25,31 @@ func (nt NullTime) Value() (driver.Value, error) {
 	return nt.Time, nil
 }
 
+type UserSessionInfo struct {
+	User
+	Email			 string		   	`json:email`
+	Deactivated      bool          	`json:"deactivated"`
+	Banned           bool          	`json:"banned"`
+	Bio              sql.NullString	`json:"bio"`
+	Following   	 []User		   	`json:"following"`
+	Followers   	 []User        	`json:"followers"`
+	Interested       []ProjectStub 	`json:"interested"`
+	Contributing     []ProjectStub 	`json:"contributing"`
+	Created          []ProjectStub 	`json:"created"`
+	InterestedThemes []Theme       	`json:"interested_themes"`
+	IsNewUser        bool			`json:"is_new_user"`
+}
+func NewUserSessionInfo() UserSessionInfo {
+	userSessionInfo := UserSessionInfo{}
+	userSessionInfo.Following = []User{}
+	userSessionInfo.Followers = []User{}
+	userSessionInfo.Interested = []ProjectStub{}
+	userSessionInfo.Contributing = []ProjectStub{}
+	userSessionInfo.Created = []ProjectStub{}
+	userSessionInfo.InterestedThemes = []Theme{}
+	return userSessionInfo
+}
+
 type User struct {
 	ID        string `json:"id"`
 	FirstName string `json:"first_name"`
@@ -38,16 +64,16 @@ func NewUser() User {
 
 type UserProfile struct {
 	User
-	Email            string        `json:"email"`
-	Deactivated      bool          `json:"deactivated"`
-	Banned           bool          `json:"banned"`
-	Bio              string        `json:"bio"`
-	FollowingCount   int           `json:"following_count"`
-	FollowersCount   int           `json:"followers_count"`
-	Interested       []ProjectStub `json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
-	Contributing     []ProjectStub `json:"contributing"` // ^
-	Created          []ProjectStub `json:"created"`      // ^
-	InterestedThemes []Theme       `json:"interested_themes"`
+	Email            string        	`json:"email"`
+	Deactivated      bool          	`json:"deactivated"`
+	Banned           bool          	`json:"banned"`
+	Bio              sql.NullString	`json:"bio"`
+	FollowingCount   int           	`json:"following_count"`
+	FollowersCount   int           	`json:"followers_count"`
+	Interested       []ProjectStub 	`json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
+	Contributing     []ProjectStub 	`json:"contributing"` // ^
+	Created          []ProjectStub 	`json:"created"`      // ^
+	InterestedThemes []Theme       	`json:"interested_themes"`
 }
 func NewUserProfile() UserProfile {
 	userProfile := UserProfile{}
