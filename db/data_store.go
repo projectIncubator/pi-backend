@@ -27,7 +27,7 @@ type userProvider interface {
 	RemoveUser(id string) error
 	GetUserFollowers(id string) ([]model.User, error)
 	GetUserFollows(id string) ([]model.User, error)
-	FollowUser(followerID string, followedID string) error
+	FollowUser(followerID string, followedID string) (model.User, error)
 	UnfollowUser(followerID string, followedID string) error
 	InterestedProject(userID string, projectID string) error
 	UninterestedProject(userID string, projectID string) error

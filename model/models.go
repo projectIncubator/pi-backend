@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"time"
 )
@@ -30,7 +29,7 @@ type UserSessionInfo struct {
 	Email			 string		   	`json:email`
 	Deactivated      bool          	`json:"deactivated"`
 	Banned           bool          	`json:"banned"`
-	Bio              sql.NullString	`json:"bio"`
+	Bio              string			`json:"bio"`
 	Following   	 []User		   	`json:"following"`
 	Followers   	 []User        	`json:"followers"`
 	Interested       []ProjectStub 	`json:"interested"`
@@ -67,21 +66,13 @@ type UserProfile struct {
 	Email            string        	`json:"email"`
 	Deactivated      bool          	`json:"deactivated"`
 	Banned           bool          	`json:"banned"`
-	Bio              sql.NullString	`json:"bio"`
+	Bio              string			`json:"bio"`
 	FollowingCount   int           	`json:"following_count"`
 	FollowersCount   int           	`json:"followers_count"`
 	Interested       []ProjectStub 	`json:"interested"`   // These only store the id's of the projects rather than projects to reduce duplicated data
 	Contributing     []ProjectStub 	`json:"contributing"` // ^
 	Created          []ProjectStub 	`json:"created"`      // ^
 	InterestedThemes []Theme       	`json:"interested_themes"`
-}
-func NewUserProfile() UserProfile {
-	userProfile := UserProfile{}
-	userProfile.Interested = []ProjectStub{}
-	userProfile.Contributing = []ProjectStub{}
-	userProfile.Created = []ProjectStub{}
-	userProfile.InterestedThemes = []Theme{}
-	return userProfile
 }
 func NewUserProfile() UserProfile {
 	userProfile := UserProfile{}

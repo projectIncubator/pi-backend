@@ -134,20 +134,37 @@ func (p PostgresDBStore) RemoveUser(id string) error {
 	return nil
 }
 
-func (p PostgresDBStore) FollowUser(followerID string, followedID string) error {
+func (p PostgresDBStore) FollowUser(followerID string, followedID string) (model.User, error) {
+
+	followed := model.NewUser()
+
 	sqlStatement := `INSERT INTO follows(follower_id, followed_id) 
 						VALUES ($1, $2)
-						RETURNING follower_id, followed_id`
+						RETURNING followed_id`
 
-	var _followedID, _followerID string
 	err := p.database.QueryRow(sqlStatement,
 		followerID,
 		followedID,
-	).Scan(&_followerID, &_followedID)
+	).Scan(&followed.ID)
 	if err != nil {
-		return err
+		return followed, err
 	}
-	return nil
+
+	sqlStatement = `SELECT first_name, last_name, image, profile_id
+							FROM users WHERE id = $1`
+
+	err = p.database.QueryRow(sqlStatement,
+		followedID,
+	).Scan(
+		&followed.FirstName,
+		&followed.LastName,
+		&followed.Image,
+		&followed.ProfileID,
+	)
+	if err != nil {
+		return followed, err
+	}
+	return followed, nil
 }
 func (p PostgresDBStore) UnfollowUser(followerID string, followedID string) error {
 
@@ -371,7 +388,7 @@ func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
 						FROM users, follows
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
-	var followers []model.User
+	followers := []model.User{}
     rows, err := p.database.Query(sqlStatement, id)
     if err != nil {
         return nil, err
@@ -398,7 +415,7 @@ func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
 						FROM users, follows
 						WHERE users.id = follows.followed_id AND follows.follower_id=$1;`
 
-	var follows []model.User
+	follows := []model.User{}
 	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
