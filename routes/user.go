@@ -91,6 +91,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = app.store.UserProvider.LoginUser(&newUser, &userInfo)
 	if err != nil {
+		log.Printf("App.CreateUser - error logging in %v",err)
 		err = app.store.UserProvider.CreateUser(&newUser, &userInfo)
 		if err != nil {
 			log.Printf("App.CreateUser - error creating user %v", err)
@@ -158,14 +159,14 @@ func (app *App) FollowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.UserProvider.FollowUser(followerID, followedID)
+	followed, err := app.store.UserProvider.FollowUser(followerID, followedID)
 	if err != nil {
 		log.Printf("%v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
+	json.NewEncoder(w).Encode(followed)
 }
 func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 
