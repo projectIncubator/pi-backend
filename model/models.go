@@ -26,7 +26,7 @@ func (nt NullTime) Value() (driver.Value, error) {
 
 type UserSessionInfo struct {
 	User
-	Email			 string		   	`json:email`
+	Email			 string		   	`json:"email"`
 	Deactivated      bool          	`json:"deactivated"`
 	Banned           bool          	`json:"banned"`
 	Bio              string			`json:"bio"`
