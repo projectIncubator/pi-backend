@@ -90,6 +90,29 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 
 
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
+func (p PostgresDBStore) UpdateUserProfile(id string, user *model.UserProfileUpdate) error {
+	sqlStatement :=
+		`UPDATE users SET first_name = $2, last_name = $3, image = $5, profile_id = $6, bio = $7
+			WHERE id = $1
+			RETURNING id;`
+	var _id string
+	err := p.database.QueryRow(sqlStatement,
+		id,
+		user.FirstName,
+		user.LastName,
+		user.Image,
+		user.ProfileID,
+		user.Bio,
+	).Scan(&_id)
+	if err != nil {
+		return err
+	}
+	if _id != id {
+		return CreateError
+	}
+	return nil
+}
+
 func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
