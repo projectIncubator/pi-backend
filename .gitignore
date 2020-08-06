@@ -3,3 +3,6 @@
 *.sum
 *.exe
 key.json
+
+# environment variables
+.env
