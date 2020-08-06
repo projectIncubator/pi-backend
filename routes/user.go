@@ -21,12 +21,15 @@ func (app *App) RegisterUserRoutes() {
 			w.WriteHeader(http.StatusOK)
 		}))))
 
+	app.router.Handle("/users/profile", negroni.New(
+		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUserProfile),USER)))).Methods("PATCH")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(http.HandlerFunc(app.CreateUser)))).Methods("POST")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateProject),USER)))).Methods("PATCH")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUser),USER)))).Methods("PATCH")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteUser),USER)))).Methods("DELETE")
@@ -68,10 +71,36 @@ func (app *App) RegisterUserRoutes() {
 }
 
 // Private APIs
+func (app *App) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 
+
+	userID := r.Context().Value("user_id").(AuthWraper).id
+	updatedUser := model.NewUserProfileUpdate()
+
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("App.UpdateUser - could not read r.Body with ioutil")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = json.Unmarshal(reqBody, &updatedUser)
+	if err != nil {
+		log.Printf("App.UpdateUser - was unable to unmarshal changes")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := app.store.UserProvider.UpdateUserProfile(userID, &updatedUser)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
 func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	userInfo:= model.NewUserSessionInfo()
+	userInfo := model.NewUserSessionInfo()
 	userInfo.IsNewUser = false
 
 	var newUser model.IDUser

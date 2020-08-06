@@ -30,6 +30,18 @@ func NewIDUser() IDUser {
 	return idUser
 }
 
+type UserProfileUpdate struct {
+	ProfileID	string	`json:"profile_id"`
+	FirstName	string 	`json:"first_name"`
+	LastName	string	`json:"last_name"'`
+	Bio			string  `json:"bio"'`
+	Image		string  `json:"image"`
+}
+func NewUserProfileUpdate() UserProfileUpdate {
+	userProfileUpdate := UserProfileUpdate{}
+	return userProfileUpdate
+}
+
 type DiscussionIn struct {
 	UserID		string `json:"creator"`
 	Title		string `json:"title"`

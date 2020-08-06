@@ -13,7 +13,7 @@ func main() {
 	// create a json
 
 	if port == "" {
-		port = "8080"
+		port = "8000"
 		log.Println("Did not find env var PORT, defaulting to 8080")
 	}
 	dbUrl := os.Getenv("DATABASE_URL")

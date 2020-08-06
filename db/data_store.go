@@ -35,6 +35,7 @@ type userProvider interface {
 	QuitProject(userID string, projectID string) error
 	InterestedTheme(userID string, name string) error
 	UninterestedTheme(userID string, name string) error
+	UpdateUserProfile(id string, user * model.UserProfileUpdate) error
 }
 
 type projectProvider interface {
