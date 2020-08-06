@@ -90,7 +90,7 @@ func (app *App) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := app.store.UserProvider.UpdateUserProfile(userID, &updatedUser)
+	err = app.store.UserProvider.UpdateUserProfile(userID, &updatedUser)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusNotFound)
