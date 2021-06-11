@@ -2,13 +2,13 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
-)
 
+	"github.com/gorilla/mux"
+)
 
 func (app *App) RegisterDiscussionRoutes() {
 	app.router.HandleFunc("/projects/{proj_id}/discussions", app.CreateDiscussion).Methods("POST")
@@ -40,8 +40,7 @@ func (app *App) CreateDiscussion(w http.ResponseWriter, r *http.Request) {
 	}
 	var newDiscussionNum = id
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(newDiscussionNum)
-	return
+	json.NewEncoder(w).Encode(newDiscussionNum)
 }
 
 func (app *App) GetDiscussion(w http.ResponseWriter, r *http.Request) {
@@ -59,5 +58,5 @@ func (app *App) GetDiscussion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(discussion) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(discussion) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }

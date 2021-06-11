@@ -1,12 +1,13 @@
 package routes
 
 import (
+	"context"
 	"encoding/json"
-	"net/http"
 	"errors"
+	"net/http"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
-	"context"
 	"github.com/gorilla/mux"
 )
 
@@ -17,16 +18,16 @@ type Jwks struct {
 	Keys []JSONWebKeys `json:"keys"`
 }
 type JSONWebKeys struct {
-	Kty string `json:"kty"`
-	Kid string `json:"kid"`
-	Use string `json:"use"`
-	N string `json:"n"`
-	E string `json:"e"`
+	Kty string   `json:"kty"`
+	Kid string   `json:"kid"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
 	X5c []string `json:"x5c"`
 }
 
 func InitAuthMiddleware() *jwtmiddleware.JWTMiddleware {
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options {
+	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			// Verify 'aud' claim
 			aud := "https://dev-mxz0v43z.auth0.com/api/v2/"
@@ -85,21 +86,23 @@ func getPemCert(token *jwt.Token) (string, error) {
 }
 
 type Scope int
+
 const (
 	USER Scope = 1 + iota
 	ADMIN
 	CREATOR
 )
+
 type AuthWraper struct {
-	id string;
-};
+	id string
+}
 
 func (app *App) middleware(next http.Handler, scope Scope) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		userToken := r.Header.Get("User-ID")
 
-		switch(scope) {
+		switch scope {
 		case USER:
 			usr, err := app.store.ScopeProvider.GetUserID(userToken)
 			if err != nil {
@@ -154,7 +157,5 @@ func (app *App) middleware(next http.Handler, scope Scope) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-
-		return
 	})
 }

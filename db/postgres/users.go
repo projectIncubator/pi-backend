@@ -7,7 +7,6 @@ import (
 // Private APIs
 
 func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
-
 	sqlStatement :=
 		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) 
 			RETURNING id, first_name, last_name, email, image, deactivated, banned, bio`
@@ -32,12 +31,7 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSess
 
 	sqlStatement =
 		`UPDATE users SET profile_id = $1 WHERE id = $1 RETURNING profile_id`
-	err = p.database.QueryRow(sqlStatement,userInfo.ID).Scan(&userInfo.ProfileID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return p.database.QueryRow(sqlStatement, userInfo.ID).Scan(&userInfo.ProfileID)
 }
 func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
 	sqlStatement :=
@@ -55,7 +49,7 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 		&userInfo.Deactivated,
 		&userInfo.Banned,
 		&userInfo.Bio,
-		)
+	)
 	if err != nil {
 		return err
 	}
@@ -87,7 +81,6 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 
 	return nil
 }
-
 
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
 func (p PostgresDBStore) UpdateUserProfile(id string, user *model.UserProfileUpdate) error {
@@ -350,7 +343,6 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE profile_id=$1`
 	}
 
-
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
 		&userProfile.ID,
@@ -412,26 +404,26 @@ func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
 	followers := []model.User{}
-    rows, err := p.database.Query(sqlStatement, id)
-    if err != nil {
-        return nil, err
-    }
-    for rows.Next() {
-        user := model.NewUser()
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		user := model.NewUser()
 
-        if err := rows.Scan(
-            &user.ID,
-            &user.FirstName,
-            &user.LastName,
-            &user.Image,
-            &user.ProfileID,
-        ); err != nil {
-            return nil, err
-        }
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			return nil, err
+		}
 
-        followers = append(followers, user)
-    }
-    return followers, nil
+		followers = append(followers, user)
+	}
+	return followers, nil
 }
 func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
 	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
@@ -559,7 +551,7 @@ func (p PostgresDBStore) GetUserCreated(id string) ([]model.ProjectStub, error) 
 func (p PostgresDBStore) GetUserInterestedThemes(id string) ([]model.Theme, error) {
 	themes := []model.Theme{}
 
-	sqlStatement :=  `SELECT name, logo, description FROM themes, user_interested_theme
+	sqlStatement := `SELECT name, logo, description FROM themes, user_interested_theme
 						WHERE user_interested_theme.user_id = $1 
 						AND user_interested_theme.theme_name = themes.name`
 

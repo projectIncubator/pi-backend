@@ -2,12 +2,13 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 )
 
 func (app *App) RegisterProjectRoutes() {
@@ -19,25 +20,25 @@ func (app *App) RegisterProjectRoutes() {
 		negroni.Wrap(http.HandlerFunc(app.CreateProject)))).Methods("POST")
 	app.router.Handle("/projects/{proj_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteProject),CREATOR)))).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteProject), CREATOR)))).Methods("DELETE") // TODO: We will not be deleting data. We will only put an account in a deactivated state
 
 	// ... + Admins APIs
 
 	app.router.Handle("/projects/{proj_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateProject),USER)))).Methods("PATCH")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateProject), USER)))).Methods("PATCH")
 	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.AddTheme),ADMIN)))).Methods("POST")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.AddTheme), ADMIN)))).Methods("POST")
 	app.router.Handle("/projects/{proj_id}/themes/{theme_name}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.RemoveTheme),ADMIN)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.RemoveTheme), ADMIN)))).Methods("DELETE")
 	app.router.Handle("/projects/{proj_id}/members/{user_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteMember),ADMIN)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteMember), ADMIN)))).Methods("DELETE")
 	app.router.Handle("/projects/{proj_id}/members/{user_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.ToggleAdmin),ADMIN)))).Methods("PATCH")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.ToggleAdmin), ADMIN)))).Methods("PATCH")
 
 	// Public APIs
 
@@ -51,7 +52,6 @@ func (app *App) RegisterProjectRoutes() {
 	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.UpdateProjPage).Methods("PATCH")
 	app.router.HandleFunc("/projects/{id}/pages/{page_name}/auth/{user_token}", app.DeleteProjPage).Methods("DELETE")
 	app.router.HandleFunc("/projects/{id}/pages/{page_name}", app.GetProjPage).Methods("GET")
-
 }
 
 // Creator APIs
@@ -78,8 +78,7 @@ func (app *App) CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	newProject.ID = id
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(newProject.ID)
-	return
+	json.NewEncoder(w).Encode(newProject.ID)
 }
 func (app *App) DeleteProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
@@ -146,8 +145,6 @@ func (app *App) AddTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-
-	return
 }
 func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]
@@ -166,8 +163,6 @@ func (app *App) RemoveTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-
-	return
 }
 func (app *App) DeleteMember(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["proj_id"]
@@ -231,7 +226,7 @@ func (app *App) GetProjectStub(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["id"]
@@ -248,10 +243,9 @@ func (app *App) GetProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(project) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 func (app *App) GetProjMembers(w http.ResponseWriter, r *http.Request) {
-
 	projectID := mux.Vars(r)["id"]
 
 	if projectID == "" {
@@ -268,28 +262,24 @@ func (app *App) GetProjMembers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(members) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+	json.NewEncoder(w).Encode(members) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
 
 // TODO APIs
 
 func (app *App) CreateProjPage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
+	json.NewEncoder(w).Encode("")
 }
 func (app *App) UpdateProjPage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
+	json.NewEncoder(w).Encode("")
 }
 func (app *App) DeleteProjPage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
+	json.NewEncoder(w).Encode("")
 }
 func (app *App) GetProjPage(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode("")
+	json.NewEncoder(w).Encode("")
 }
-
-
-
-

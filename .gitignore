@@ -6,3 +6,6 @@ key.json
 
 # environment variables
 .env
+
+# IntelliJ
+.idea/

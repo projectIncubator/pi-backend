@@ -2,12 +2,13 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/codegangsta/negroni"
-	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 )
 
 func (app *App) RegisterUserRoutes() {
@@ -23,47 +24,46 @@ func (app *App) RegisterUserRoutes() {
 
 	app.router.Handle("/users/profile", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUserProfile),USER)))).Methods("PATCH")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUserProfile), USER)))).Methods("PATCH")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
 		negroni.Wrap(http.HandlerFunc(app.CreateUser)))).Methods("POST")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUser),USER)))).Methods("PATCH")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UpdateUser), USER)))).Methods("PATCH")
 	app.router.Handle("/users", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteUser),USER)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.DeleteUser), USER)))).Methods("DELETE")
 
 	app.router.Handle("/follows/{followed_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.FollowUser),USER)))).Methods("POST")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.FollowUser), USER)))).Methods("POST")
 	app.router.Handle("/follows/{followed_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UnfollowUser),USER)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UnfollowUser), USER)))).Methods("DELETE")
 
 	app.router.Handle("/interested/{project_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedProject),USER)))).Methods("POST")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedProject), USER)))).Methods("POST")
 	app.router.Handle("/interested/{project_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedProject),USER)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedProject), USER)))).Methods("DELETE")
 
 	app.router.Handle("/interested/{theme_name}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedTheme),USER)))).Methods("POST")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.InterestedTheme), USER)))).Methods("POST")
 	app.router.Handle("/interested/{theme_name}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedTheme),USER)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.UninterestedTheme), USER)))).Methods("DELETE")
 
 	app.router.Handle("/contributes/{project_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.JoinProject),USER)))).Methods("POST")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.JoinProject), USER)))).Methods("POST")
 	app.router.Handle("/contributes/{project_id}", negroni.New(
 		negroni.HandlerFunc(app.jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(app.middleware(http.HandlerFunc(app.QuitProject),USER)))).Methods("DELETE")
+		negroni.Wrap(app.middleware(http.HandlerFunc(app.QuitProject), USER)))).Methods("DELETE")
 
 	// Public APIs
-
 	app.router.Handle("/users/{id}", http.HandlerFunc(app.GetUser)).Methods("GET")
 	app.router.HandleFunc("/users/{id}/profile", app.GetUserProfile).Methods("GET")
 	app.router.HandleFunc("/users/{id}/followers", app.GetUserFollowers).Methods("GET")
@@ -72,8 +72,6 @@ func (app *App) RegisterUserRoutes() {
 
 // Private APIs
 func (app *App) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
-
-
 	userID := r.Context().Value("user_id").(AuthWraper).id
 	updatedUser := model.NewUserProfileUpdate()
 
@@ -120,7 +118,7 @@ func (app *App) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = app.store.UserProvider.LoginUser(&newUser, &userInfo)
 	if err != nil {
-		log.Printf("App.CreateUser - error logging in %v",err)
+		log.Printf("App.CreateUser - error logging in %v", err)
 		err = app.store.UserProvider.CreateUser(&newUser, &userInfo)
 		if err != nil {
 			log.Printf("App.CreateUser - error creating user %v", err)
@@ -216,7 +214,6 @@ func (app *App) UnfollowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 
 func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +235,6 @@ func (app *App) InterestedProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 
@@ -259,7 +255,6 @@ func (app *App) UninterestedProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 
 func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
@@ -281,12 +276,10 @@ func (app *App) InterestedTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.Context().Value("user_id").(AuthWraper).id
-
 
 	projectID := mux.Vars(r)["project_id"]
 
@@ -303,7 +296,6 @@ func (app *App) UninterestedTheme(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 
 func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
@@ -325,7 +317,6 @@ func (app *App) JoinProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
 
@@ -346,7 +337,6 @@ func (app *App) QuitProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	return
 }
 
 // Public APIs

@@ -1,13 +1,14 @@
 package routes
 
 import (
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"go-api/db"
 	"go-api/db/postgres"
 	"log"
 	"net/http"
+
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type App struct {
@@ -19,7 +20,7 @@ type App struct {
 
 type AppConfig struct {
 	DbUrl string
-	//ProjectID string
+	//ProjectID string TODO
 	//BucketName string
 }
 
@@ -31,8 +32,8 @@ func NewApp(config *AppConfig) *App {
 		log.Fatal(err)
 	}
 	return &App{
-		router: mux.NewRouter().StrictSlash(true),
-		store:  store,
+		router:        mux.NewRouter().StrictSlash(true),
+		store:         store,
 		jwtMiddleware: InitAuthMiddleware(),
 	}
 }
@@ -63,5 +64,5 @@ func (app *App) Close() {
 func (app *App) index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"1","Hello World!",}`))
+	w.Write([]byte(`{"1","Hello World!",}`)) // TODO
 }
