@@ -23,12 +23,4 @@ $ make run
 ```
 
 This let's you run the app on localhost. It will do so on port 8000.
-
-```sh
-# On Windows to configure env vars in powershell, use the following
-$ $Env:DATABASE_URL='postgres://uzwwzorwjgovha:7b761af65f1da20457023b2938c433e099ead5c52397438cda64ee69d1096a91@ec2-52-72-65-76.compute-1.amazonaws.com:5432/d5oipjlaqis6ph'
-$ $Env:PORT=8000
-
-# To run without a Makefile use
-$ go run .
-```
+To run make on Windows, consider using WSL
