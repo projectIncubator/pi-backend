@@ -11,8 +11,8 @@ CREATE TABLE users
     email           TEXT NOT NULL UNIQUE,
     image           TEXT DEFAULT 'placeholder_url',
     profile_id      TEXT UNIQUE, /* TODO: set = to id if null*/
-    bio             TEXT NOT NULL DEFAULT '',
-    status          USER_STATUS DEFAULT 'active'
+    status          USER_STATUS DEFAULT 'active',
+    bio             TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE projects

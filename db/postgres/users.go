@@ -389,7 +389,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//Fill in created array
-	userProfile.Created, err = p.GetUserCreated(userProfile.ID)
+	userProfile.Created, _ = p.GetUserCreated(userProfile.ID)
 
 	return &userProfile, nil
 }

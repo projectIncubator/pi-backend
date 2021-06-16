@@ -31,7 +31,7 @@ func (p PostgresDBStore) CreateProject(project *model.Project) (string, error) {
 	sqlStatement =
 		`INSERT INTO contributing(user_id, project_id, is_admin)
 			VALUES ($1, $2, true);`
-	p.database.QueryRow(sqlStatement,project.Creator,id)
+	p.database.QueryRow(sqlStatement, project.Creator, id)
 
 	return id, nil
 }
@@ -193,7 +193,7 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 		&projectStub.StartDate,
 		&projectStub.EndDate,
 		&projectStub.OneLiner,
-		)
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -202,14 +202,14 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
-	rows, err := p.database.Query(sqlStatement, id)
+	rows, _ := p.database.Query(sqlStatement, id)
 	for rows.Next() {
 		var theme model.Theme
 		if err = rows.Scan(
 			&theme.Name,
 			&theme.Logo,
 			&theme.Description,
-			); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 		projectStub.Themes = append(projectStub.Themes, theme)
@@ -218,16 +218,16 @@ func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
 	// Member Count
 	sqlStatement = `SELECT COUNT(*) from contributing where project_id = $1`
 	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan (
+	err = row.Scan(
 		&projectStub.MemberCount,
-		)
+	)
 	if err != nil {
 		return nil, err
 	}
 	// Interested Count
 	sqlStatement = `SELECT COUNT(*) from interested where project_id = $1`
 	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan (
+	err = row.Scan(
 		&projectStub.InterestedCount,
 	)
 	if err != nil {
@@ -281,7 +281,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	sqlStatement = `SELECT proj_id, disc_num, creator, creation_date, title, text, closed 
 						FROM discussions
 						WHERE proj_id = $1`
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, _ = p.database.Query(sqlStatement, id)
 	for rows.Next() {
 		var discussion model.DiscussionOut
 		if err = rows.Scan(
@@ -292,7 +292,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			&discussion.Title,
 			&discussion.Text,
 			&discussion.Closed,
-		); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 		project.Discussion = append(project.Discussion, discussion)
@@ -301,7 +301,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	sqlStatement = `SELECT themes.name, themes.logo, themes.description
 						FROM themes,project_has_theme
 						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, _ = p.database.Query(sqlStatement, id)
 	for rows.Next() {
 
 		var theme model.Theme
@@ -309,7 +309,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 			&theme.Name,
 			&theme.Logo,
 			&theme.Description,
-		); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 
@@ -320,13 +320,13 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 						FROM sidebar_modules
 						WHERE project_id = $1
 						ORDER BY index ASC;`
-	rows, err = p.database.Query(sqlStatement, id)
+	rows, _ = p.database.Query(sqlStatement, id)
 	for rows.Next() {
 		var sidebar model.SideBarModule
 		if err = rows.Scan(
 			&sidebar.Type,
 			&sidebar.Content,
-		); err!= nil {
+		); err != nil {
 			return nil, err
 		}
 		project.SideBar = append(project.SideBar, sidebar)
@@ -335,7 +335,7 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	// Member Count
 	sqlStatement = `SELECT COUNT(*) from contributing where project_id = $1`
 	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan (
+	err = row.Scan(
 		&project.MemberCount,
 	)
 	if err != nil {
@@ -344,13 +344,12 @@ func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	// Interested Count
 	sqlStatement = `SELECT COUNT(*) from interested where project_id = $1`
 	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan (
+	err = row.Scan(
 		&project.InterestedCount,
 	)
 	if err != nil {
 		return nil, err
 	}
-
 
 	return &project, nil
 }
@@ -404,7 +403,7 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 		return _err
 	}
 	if _count == 1 {
-		_sqlStatement:= `SELECT user_id FROM contributing WHERE is_admin = true;`
+		_sqlStatement := `SELECT user_id FROM contributing WHERE is_admin = true;`
 		var _userID string
 		_err = p.database.QueryRow(_sqlStatement).Scan(&_userID)
 		if _err != nil {
@@ -437,7 +436,7 @@ func (p PostgresDBStore) ChangeAdmin(projectID string, userID string) error {
 
 func (p PostgresDBStore) CheckAdmin(projectID string, userID string) bool {
 	type _UserID struct {
-		ID        string `json:"id"`
+		ID string `json:"id"`
 	}
 	var userTK _UserID
 	userTK.ID = ""
@@ -447,7 +446,7 @@ func (p PostgresDBStore) CheckAdmin(projectID string, userID string) bool {
 		sqlStatement,
 		projectID,
 		userID,
-		)
+	)
 	err := row.Scan(
 		&userTK.ID,
 	)
@@ -459,6 +458,5 @@ func (p PostgresDBStore) CheckAdmin(projectID string, userID string) bool {
 	} else {
 		return true
 	}
-
 
 }

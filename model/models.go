@@ -111,7 +111,7 @@ type Project struct {
 	Discussion []DiscussionOut `json:"discussion_id"`
 	Admins     []User          `json:"admins"`
 	CoverPhoto string          `json:"coverphoto"`
-	SideBar    []SideBarModule `json: "sidebar"`
+	SideBar    []SideBarModule `json:"sidebar"`
 	//	Media       []string  `json:"media"`
 	//	Modules     []ProjectModule `json:"projectModules"`
 }
@@ -184,8 +184,8 @@ func NewPost() Post {
 }
 
 type SignInResponse struct {
-	UserID    string `json: "user_id"`
-	IsNewUser bool   `json: "is_new_user"`
+	UserID    string `json:"user_id"`
+	IsNewUser bool   `json:"is_new_user"`
 }
 
 func NewSignInResponse() SignInResponse {

@@ -30,7 +30,7 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 	destination := mux.Vars(r)["destination"]
 
-	project, err := app.store.ProjectProvider.GetProject(projectID)
+	project, _ := app.store.ProjectProvider.GetProject(projectID)
 
 	if project == nil { // Check that the project exists (not storing for some uuid that isnt a real project
 		log.Println("App.AddObject - No existing project with this projectID")
@@ -60,7 +60,7 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	ext, err := utils.CheckMime(imageFile)
+	ext, _ := utils.CheckMime(imageFile)
 
 	name := "projects/" + projectID + "/" + uuid.New().String() + ext
 
