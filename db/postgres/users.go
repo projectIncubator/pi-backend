@@ -107,7 +107,7 @@ func (p PostgresDBStore) UpdateUserProfile(id string, user *model.UserProfileUpd
 func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, deactivated = $7, banned = $8
+				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, status = $7
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -366,7 +366,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 
-	//  followers of the user
+	//Followers of the user
 	sqlStatement =
 		`SELECT COUNT(*)
 			FROM users, follows
