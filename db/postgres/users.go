@@ -9,7 +9,7 @@ import (
 func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
 	sqlStatement :=
 		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) 
-			RETURNING id, first_name, last_name, email, image, deactivated, banned, bio`
+			RETURNING id, first_name, last_name, email, image, status, bio`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
 		user.FirstName,
@@ -21,8 +21,7 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSess
 		&userInfo.LastName,
 		&userInfo.Email,
 		&userInfo.Image,
-		&userInfo.Deactivated,
-		&userInfo.Banned,
+		&userInfo.Status,
 		&userInfo.Bio,
 	)
 	if err != nil {
@@ -35,7 +34,7 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSess
 }
 func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
 	sqlStatement :=
-		`SELECT id, profile_id, first_name, last_name, email, image, deactivated, banned, bio
+		`SELECT id, profile_id, first_name, last_name, email, image, status, bio
 			FROM users WHERE id_token = $1`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
@@ -46,8 +45,7 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 		&userInfo.LastName,
 		&userInfo.Email,
 		&userInfo.Image,
-		&userInfo.Deactivated,
-		&userInfo.Banned,
+		&userInfo.Status,
 		&userInfo.Bio,
 	)
 	if err != nil {
@@ -120,8 +118,7 @@ func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.
 		user.Email,
 		user.Image,
 		user.ProfileID,
-		user.Deactivated,
-		user.Banned,
+		user.Status,
 	).Scan(&_id)
 	if err != nil {
 		return nil, err
@@ -134,7 +131,7 @@ func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.
 func (p PostgresDBStore) RemoveUser(id string) error {
 	sqlStatement :=
 		`UPDATE users
-			SET deactivated = TRUE
+			SET status = 'deactivated'
 			WHERE id = $1
 			RETURNING id;`
 	var _id string
@@ -331,16 +328,15 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 	return &user, nil
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
-
 	userProfile := model.NewUserProfile()
 	var sqlStatement string
 
 	if IsValidUUID(id) {
 		sqlStatement =
-			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
+			`SELECT id, first_name, last_name, email, image, profile_id, status FROM users WHERE id=$1;`
 	} else {
 		sqlStatement =
-			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE profile_id=$1`
+			`SELECT id, first_name, last_name, email, image, profile_id, status FROM users WHERE profile_id=$1`
 	}
 
 	row := p.database.QueryRow(sqlStatement, id)
@@ -351,8 +347,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		&userProfile.Email,
 		&userProfile.Image,
 		&userProfile.ProfileID,
-		&userProfile.Deactivated,
-		&userProfile.Banned,
+		&userProfile.Status,
 	)
 
 	if err != nil {

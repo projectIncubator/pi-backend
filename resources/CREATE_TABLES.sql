@@ -1,5 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+CREATE TYPE USER_STATUS AS ENUM ('active', 'deactivated', 'banned');
+
 CREATE TABLE users
 (
     id              uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -10,8 +12,7 @@ CREATE TABLE users
     image           TEXT DEFAULT 'placeholder_url',
     profile_id      TEXT UNIQUE, /* TODO: set = to id if null*/
     bio             TEXT NOT NULL DEFAULT '',
-    deactivated     BOOLEAN DEFAULT FALSE,
-    banned          BOOLEAN DEFAULT FALSE
+    status          USER_STATUS DEFAULT 'active'
 );
 
 CREATE TABLE projects
@@ -41,10 +42,10 @@ CREATE TABLE themes
 (
     name        TEXT PRIMARY KEY,
     logo        TEXT NOT NULL,
-    description TEXT DEFAULT 'insert description here'
+    description TEXT DEFAULT 'Insert description here'
 );
 
-CREATE TABLE medias
+CREATE TABLE media
 (
     url             TEXT PRIMARY KEY,
     file_name       TEXT, /* TODO: set = to id if null*/
@@ -87,7 +88,7 @@ CREATE TABLE discussion_has_media
     disc_num   INTEGER,
     media_url  TEXT,
     FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
-    FOREIGN KEY (media_url) REFERENCES medias(url),
+    FOREIGN KEY (media_url) REFERENCES media(url),
     PRIMARY KEY (proj_id, disc_num, media_url)
 );
 
@@ -98,7 +99,7 @@ CREATE TABLE post_has_media
     post_num   INTEGER,
     media_url  TEXT,
     FOREIGN KEY (proj_id, disc_num) REFERENCES discussions(proj_id, disc_num),
-    FOREIGN KEY (media_url) REFERENCES medias(url),
+    FOREIGN KEY (media_url) REFERENCES media(url),
     PRIMARY KEY (proj_id, disc_num, media_url)
 );
 

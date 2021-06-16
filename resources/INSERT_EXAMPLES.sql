@@ -1,12 +1,12 @@
 -- Examples User
-INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('00000', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c', 'Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'purity', FALSE, FALSE);
-INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('11111', 'de8ccc40-9372-411d-8497-a0becf01eff0', 'John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'joker', FALSE, FALSE);
-INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('10101', '591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'KayYep', FALSE, FALSE);
-INSERT INTO users (id_token, id,  first_name, last_name, email, image, profile_id, deactivated, banned)
-VALUES ('01010', 'c9208c94-3c0f-416e-997d-a4d23cb3016f', 'Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test', FALSE, FALSE);
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id)
+VALUES ('00000', 'beee0bf1-5b7e-4f21-bcea-17ae7c45b18c', 'Alexander', 'Bergholm', 'bergholm.alexander@gmail.com', 'someurllater.com', 'purity');
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id)
+VALUES ('11111', 'de8ccc40-9372-411d-8497-a0becf01eff0', 'John', 'Zhang', 'projincubator@gmail.com', 'someurllater.com', 'joker');
+INSERT INTO users (id_token, id, first_name, last_name, email, image, profile_id)
+VALUES ('10101', '591564c5-45e4-43aa-bc5f-c37a50a6e7d8', 'Kenrick', 'Yap', 'dicksaresocute69@gmail.com', 'someurllater.com', 'KayYep');
+INSERT INTO users (id_token, id,  first_name, last_name, email, image, profile_id)
+VALUES ('01010', 'c9208c94-3c0f-416e-997d-a4d23cb3016f', 'Test', 'Testing', 'testperson@gmail.com', 'sometest.com', 'test');
 
 
 -- Examples Projects

@@ -26,13 +26,10 @@ func (nt NullTime) Value() (driver.Value, error) {
 	return nt.Time, nil
 }
 
-// TODO: Make user state enum not bools
-
 type UserSessionInfo struct {
 	User
 	Email            string        `json:"email"`
-	Deactivated      bool          `json:"deactivated"`
-	Banned           bool          `json:"banned"`
+	Status           string        `json:"status"`
 	Bio              string        `json:"bio"`
 	Following        []User        `json:"following"`
 	Followers        []User        `json:"followers"`
@@ -70,8 +67,7 @@ func NewUser() User {
 type UserProfile struct {
 	User
 	Email            string        `json:"email"`
-	Deactivated      bool          `json:"deactivated"`
-	Banned           bool          `json:"banned"`
+	Status           string        `json:"status"`
 	Bio              string        `json:"bio"`
 	FollowingCount   int           `json:"following_count"`
 	FollowersCount   int           `json:"followers_count"`
@@ -89,8 +85,6 @@ func NewUserProfile() UserProfile {
 	userProfile.InterestedThemes = []Theme{}
 	return userProfile
 }
-
-// TODO: Make project state enum not string
 
 type ProjectStub struct {
 	ID              string    `json:"id"`
