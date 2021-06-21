@@ -24,7 +24,7 @@ type AppConfig struct {
 }
 
 func NewApp(config *AppConfig) *App {
-	store, err := postgres.NewPostgresDataStore(config.DbUrl)
+	store, err := postgres.NewPostgresDataStore("user=postgres dbname=projectincubator sslmode=disable")
 	// TODO: Create context and bucket instance?
 	if err != nil {
 		log.Println("Failed to connect to database")

@@ -14,7 +14,7 @@ func main() {
 
 	if port == "" {
 		port = "8000"
-		log.Println("Did not find env var PORT, defaulting to 8080")
+		log.Println("Did not find env var PORT, defaulting to 8000")
 	}
 	dbUrl := os.Getenv("DATABASE_URL")
 	// More environment variables to be added here
