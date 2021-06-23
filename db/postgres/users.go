@@ -7,10 +7,9 @@ import (
 // Private APIs
 
 func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
-
 	sqlStatement :=
 		`INSERT INTO users(id_token, first_name, last_name, email) VALUES ($1, $2, $3, $4) 
-			RETURNING id, first_name, last_name, email, image, deactivated, banned, bio`
+			RETURNING id, first_name, last_name, email, image, status, bio`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
 		user.FirstName,
@@ -22,8 +21,7 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSess
 		&userInfo.LastName,
 		&userInfo.Email,
 		&userInfo.Image,
-		&userInfo.Deactivated,
-		&userInfo.Banned,
+		&userInfo.Status,
 		&userInfo.Bio,
 	)
 	if err != nil {
@@ -32,16 +30,11 @@ func (p PostgresDBStore) CreateUser(user *model.IDUser, userInfo *model.UserSess
 
 	sqlStatement =
 		`UPDATE users SET profile_id = $1 WHERE id = $1 RETURNING profile_id`
-	err = p.database.QueryRow(sqlStatement,userInfo.ID).Scan(&userInfo.ProfileID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return p.database.QueryRow(sqlStatement, userInfo.ID).Scan(&userInfo.ProfileID)
 }
 func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessionInfo) error {
 	sqlStatement :=
-		`SELECT id, profile_id, first_name, last_name, email, image, deactivated, banned, bio
+		`SELECT id, profile_id, first_name, last_name, email, image, status, bio
 			FROM users WHERE id_token = $1`
 	err := p.database.QueryRow(sqlStatement,
 		user.IDToken,
@@ -52,10 +45,9 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 		&userInfo.LastName,
 		&userInfo.Email,
 		&userInfo.Image,
-		&userInfo.Deactivated,
-		&userInfo.Banned,
+		&userInfo.Status,
 		&userInfo.Bio,
-		)
+	)
 	if err != nil {
 		return err
 	}
@@ -88,7 +80,6 @@ func (p PostgresDBStore) LoginUser(user *model.IDUser, userInfo *model.UserSessi
 	return nil
 }
 
-
 //TODO: Problem: pq: invalid input syntax for type uuid: "" error when including ProfileID
 func (p PostgresDBStore) UpdateUserProfile(id string, user *model.UserProfileUpdate) error {
 	sqlStatement :=
@@ -116,7 +107,7 @@ func (p PostgresDBStore) UpdateUserProfile(id string, user *model.UserProfileUpd
 func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.UserProfile, error) {
 	sqlStatement :=
 		`UPDATE users
-				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, deactivated = $7, banned = $8
+				SET first_name = $2, last_name = $3, email = $4, image = $5, profile_id = $6, status = $7
 				WHERE id = $1
 				RETURNING id;`
 	var _id string
@@ -127,8 +118,7 @@ func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.
 		user.Email,
 		user.Image,
 		user.ProfileID,
-		user.Deactivated,
-		user.Banned,
+		user.Status,
 	).Scan(&_id)
 	if err != nil {
 		return nil, err
@@ -141,7 +131,7 @@ func (p PostgresDBStore) UpdateUser(id string, user *model.UserProfile) (*model.
 func (p PostgresDBStore) RemoveUser(id string) error {
 	sqlStatement :=
 		`UPDATE users
-			SET deactivated = TRUE
+			SET status = 'deactivated'
 			WHERE id = $1
 			RETURNING id;`
 	var _id string
@@ -338,18 +328,16 @@ func (p PostgresDBStore) GetUser(id string) (*model.User, error) {
 	return &user, nil
 }
 func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
-
 	userProfile := model.NewUserProfile()
 	var sqlStatement string
 
 	if IsValidUUID(id) {
 		sqlStatement =
-			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE id=$1;`
+			`SELECT id, first_name, last_name, email, image, profile_id, status FROM users WHERE id=$1;`
 	} else {
 		sqlStatement =
-			`SELECT id, first_name, last_name, email, image, profile_id, deactivated, banned FROM users WHERE profile_id=$1`
+			`SELECT id, first_name, last_name, email, image, profile_id, status FROM users WHERE profile_id=$1`
 	}
-
 
 	row := p.database.QueryRow(sqlStatement, id)
 	err := row.Scan(
@@ -359,8 +347,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		&userProfile.Email,
 		&userProfile.Image,
 		&userProfile.ProfileID,
-		&userProfile.Deactivated,
-		&userProfile.Banned,
+		&userProfile.Status,
 	)
 
 	if err != nil {
@@ -379,7 +366,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 
-	//  followers of the user
+	//Followers of the user
 	sqlStatement =
 		`SELECT COUNT(*)
 			FROM users, follows
@@ -402,7 +389,7 @@ func (p PostgresDBStore) GetUserProfile(id string) (*model.UserProfile, error) {
 		return nil, err
 	}
 	//Fill in created array
-	userProfile.Created, err = p.GetUserCreated(userProfile.ID)
+	userProfile.Created, _ = p.GetUserCreated(userProfile.ID)
 
 	return &userProfile, nil
 }
@@ -412,26 +399,26 @@ func (p PostgresDBStore) GetUserFollowers(id string) ([]model.User, error) {
 						WHERE users.id = follows.follower_id AND follows.followed_id=$1;`
 
 	followers := []model.User{}
-    rows, err := p.database.Query(sqlStatement, id)
-    if err != nil {
-        return nil, err
-    }
-    for rows.Next() {
-        user := model.NewUser()
+	rows, err := p.database.Query(sqlStatement, id)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		user := model.NewUser()
 
-        if err := rows.Scan(
-            &user.ID,
-            &user.FirstName,
-            &user.LastName,
-            &user.Image,
-            &user.ProfileID,
-        ); err != nil {
-            return nil, err
-        }
+		if err := rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Image,
+			&user.ProfileID,
+		); err != nil {
+			return nil, err
+		}
 
-        followers = append(followers, user)
-    }
-    return followers, nil
+		followers = append(followers, user)
+	}
+	return followers, nil
 }
 func (p PostgresDBStore) GetUserFollows(id string) ([]model.User, error) {
 	sqlStatement := `SELECT users.id, users.first_name, users.last_name, users.image, users.profile_id
@@ -559,7 +546,7 @@ func (p PostgresDBStore) GetUserCreated(id string) ([]model.ProjectStub, error) 
 func (p PostgresDBStore) GetUserInterestedThemes(id string) ([]model.Theme, error) {
 	themes := []model.Theme{}
 
-	sqlStatement :=  `SELECT name, logo, description FROM themes, user_interested_theme
+	sqlStatement := `SELECT name, logo, description FROM themes, user_interested_theme
 						WHERE user_interested_theme.user_id = $1 
 						AND user_interested_theme.theme_name = themes.name`
 

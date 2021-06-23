@@ -2,11 +2,12 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"go-api/model"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func (app *App) RegisterThemeRoutes() {
@@ -41,8 +42,7 @@ func (app *App) CreateTheme(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	//_ = json.NewEncoder(w).Encode(newTheme)
-	return
+	//json.NewEncoder(w).Encode(newTheme)
 }
 func (app *App) GetTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]
@@ -82,6 +82,8 @@ func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(name) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 }
+
+// TODO ?
 //func (app *App) GetProjectsWithTheme(w http.ResponseWriter, r *http.Request) {
 //	themeName := mux.Vars(r)["id"]
 //
@@ -96,7 +98,7 @@ func (app *App) UpdateTheme(w http.ResponseWriter, r *http.Request) {
 //		return
 //	}
 //	w.WriteHeader(http.StatusOK)
-//	//_ = json.NewEncoder(w).Encode(projects) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
+//	//json.NewEncoder(w).Encode(projects) // <- Sending the project as a json {id: ..., Title: ..., Stage ... , .. }
 //}
 func (app *App) DeleteTheme(w http.ResponseWriter, r *http.Request) {
 	themeName := mux.Vars(r)["theme_name"]

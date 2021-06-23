@@ -23,5 +23,4 @@ $ make run
 ```
 
 This let's you run the app on localhost. It will do so on port 8000.
-
-
+To run make on Windows, consider using WSL

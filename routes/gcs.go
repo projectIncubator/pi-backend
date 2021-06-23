@@ -1,15 +1,15 @@
 package routes
 
 import (
-
-	"github.com/gorilla/mux"
+	"encoding/json"
 	"go-api/db/cloud"
 	"go-api/utils"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
+
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 func (app *App) RegisterGoogleCloudRoutes() {
@@ -30,7 +30,7 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	projectID := mux.Vars(r)["project_id"]
 	destination := mux.Vars(r)["destination"]
 
-	project, err := app.store.ProjectProvider.GetProject(projectID)
+	project, _ := app.store.ProjectProvider.GetProject(projectID)
 
 	if project == nil { // Check that the project exists (not storing for some uuid that isnt a real project
 		log.Println("App.AddObject - No existing project with this projectID")
@@ -60,9 +60,9 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	ext, err := utils.CheckMime(imageFile)
+	ext, _ := utils.CheckMime(imageFile)
 
-	name := "projects/"+projectID+"/"+uuid.New().String()+ext
+	name := "projects/" + projectID + "/" + uuid.New().String() + ext
 
 	filename := header.Filename
 	log.Println(filename)
@@ -83,11 +83,10 @@ func (app *App) AddObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 	type UserToken struct {
-		ID        string `json:"id"`
-		FileName  string `json:"name"`
+		ID       string `json:"id"`
+		FileName string `json:"name"`
 	}
 
 	var userTk UserToken
@@ -104,11 +103,11 @@ func (app *App) DeleteObject(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	userID :=userTk.ID
+	userID := userTk.ID
 	fileName := userTk.FileName
 	projectID := mux.Vars(r)["project_id"]
 	//Call a function to check if the user is an admin if the user is an admin
-	isAdmin :=app.store.ProjectProvider.CheckAdmin(projectID, userID)
+	isAdmin := app.store.ProjectProvider.CheckAdmin(projectID, userID)
 	if !isAdmin {
 		log.Printf("App.DeleteObject - not an admin, do not have permission to delete %v", err)
 		w.WriteHeader(http.StatusBadRequest)

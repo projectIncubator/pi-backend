@@ -2,11 +2,12 @@ package utils
 
 import (
 	"fmt"
-	"github.com/gabriel-vasile/mimetype"
 	"io"
 	"log"
 	"mime/multipart"
 	"regexp"
+
+	"github.com/gabriel-vasile/mimetype"
 )
 
 // Validating image files to be of correct type
@@ -41,6 +42,7 @@ func IsValidUUID(uuid string) bool {
 	return r.MatchString(uuid)
 }
 
+// TODO ?
 //// Generating uuid's when not through Postgres
 //func UUIDGen() string {
 //	return uuid.New()
