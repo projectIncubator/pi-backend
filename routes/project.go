@@ -42,6 +42,7 @@ func (app *App) RegisterProjectRoutes() {
 
 	// Public APIs
 
+	app.router.HandleFunc("/projects", app.GetProjects).Methods("GET")
 	app.router.Handle("/projects/{id}", http.HandlerFunc(app.GetProject)).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/stub", app.GetProjectStub).Methods("GET")
 	app.router.HandleFunc("/projects/{id}/members", app.GetProjMembers).Methods("GET")

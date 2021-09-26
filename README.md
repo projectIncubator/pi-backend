@@ -18,9 +18,20 @@ If you at any point in time you need to do "go get NAME_OF_MODULE", you should a
 ### Starting the app
 
 ```sh
-# start the backend using the provided Makefile
+# Start the backend using the provided Makefile
 $ make run
 ```
 
-This let's you run the app on localhost. It will do so on port 8000.
-To run make on Windows, consider using WSL
+This lets you run the app on localhost. It will do so on port 8000.
+
+To run make on Windows, consider using WSL:
+```sh
+# If needed, run
+$ sudo apt-get update
+
+# Install go, npm, and heroku
+# If these are already installed they can instead be added to the PATH
+$ sudo apt install golang-go
+$ sudo apt install npm
+$ npm install -g heroku
+```

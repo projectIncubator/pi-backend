@@ -3,6 +3,8 @@ package postgres
 import (
 	"go-api/model"
 	"log"
+	"strconv"
+	"net/http"
 )
 
 // Creator APIs
@@ -139,6 +141,85 @@ func (p PostgresDBStore) RemoveTheme(themeName string, projectID string) error {
 
 // Public APIs
 
+func (p PostgresDBStore) GetProjects(r *http.Request) ([]model.ProjectStub, error) {
+	var projects []model.ProjectStub
+	sqlStatement :=	`SELECT id, title, state, logo, start_date, end_date, oneliner, COALESCE(contributors, 0), COALESCE(interested, 0)
+					FROM
+					projects p
+					LEFT JOIN (SELECT project_id, COUNT(*) AS contributors FROM contributing GROUP BY project_id) c
+					ON c.project_id = id
+					LEFT JOIN (SELECT project_id, COUNT(*) AS interested FROM interested GROUP BY project_id) i
+					ON i.project_id = id
+					ORDER BY $1 $2
+					LIMIT $3
+					OFFSET $4;` // TODO replace the limit/offset with a faster query, keyset or something
+					//sortBy=name&sort=desc&page=3&perPage=50 TODO create index on anything sortby
+					
+	sortBy := "name"
+	key := r.URL.Query().Get("sortBy")
+    if key != "" { sortBy = key } //TODO try catch, sanitize
+
+	sort := "DESC" //TODO
+
+	var err error
+	var perPage int
+	key = r.URL.Query().Get("perPage")
+    if key != "" {
+		perPage, err = strconv.Atoi(key)
+		if err != nil { perPage = 5 }
+	} //TODO try catch, sanitize
+	
+	var page int
+	key = r.URL.Query().Get("page")
+    if key != "" {
+		page, err = strconv.Atoi(key)
+		if err != nil { page = 0 }
+	} //TODO try catch, sanitize
+
+	//TODO filter
+
+	rows, err := p.database.Query(sqlStatement, sortBy, sort, perPage, perPage * page)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		projectStub := model.NewProjectStub()
+		if err := rows.Scan(
+			&projectStub.ID,
+			&projectStub.Title,
+			&projectStub.State,
+			&projectStub.Logo,
+			&projectStub.StartDate,
+			&projectStub.EndDate,
+			&projectStub.OneLiner,
+			&projectStub.MemberCount,
+			&projectStub.InterestedCount,
+		); err != nil {
+			return nil, err
+		}
+
+		//TODO refactor all this to use a common func for getting stubs
+		sqlStatement = `SELECT themes.name, themes.logo, themes.description
+					FROM themes, project_has_theme
+					WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
+		rows, _ := p.database.Query(sqlStatement, &projectStub.ID)
+		for rows.Next() {
+			var theme model.Theme
+			if err = rows.Scan(
+				&theme.Name,
+				&theme.Logo,
+				&theme.Description,
+			); err != nil {
+				return nil, err
+			}
+			projectStub.Themes = append(projectStub.Themes, theme)
+		}
+
+		projects = append(projects, projectStub)
+	}
+
+	return projects, nil
+}
 func (p PostgresDBStore) GetProjMembers(id string) ([]model.User, error) {
 	var members []model.User
 	sqlStatement :=
@@ -180,63 +261,55 @@ func (p PostgresDBStore) CreateProjectMedia(projectID string, mediaURL string) e
 }
 
 func (p PostgresDBStore) GetProjectStub(id string) (*model.ProjectStub, error) {
-
-	projectStub := model.NewProjectStub()
-
-	sqlStatement := `SELECT id, title, state, logo, start_date, end_date, oneliner FROM projects WHERE id=$1;`
-	row := p.database.QueryRow(sqlStatement, id)
-	err := row.Scan(
-		&projectStub.ID,
-		&projectStub.Title,
-		&projectStub.State,
-		&projectStub.Logo,
-		&projectStub.StartDate,
-		&projectStub.EndDate,
-		&projectStub.OneLiner,
-	)
+	sqlStatement :=	`SELECT id, title, state, logo, start_date, end_date, oneliner, COALESCE(contributors, 0), COALESCE(interested, 0)
+					FROM
+					projects p
+					LEFT JOIN (SELECT project_id, COUNT(*) AS contributors FROM contributing GROUP BY project_id) c
+					ON c.project_id = id
+					LEFT JOIN (SELECT project_id, COUNT(*) AS interested FROM interested GROUP BY project_id) i
+					ON i.project_id = id
+					WHERE id=$1;`
+	rows, err := p.database.Query(sqlStatement, id)
 	if err != nil {
 		return nil, err
 	}
-
-	// Fill in the themes array
-	sqlStatement = `SELECT themes.name, themes.logo, themes.description
-						FROM themes,project_has_theme
-						WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
-	rows, _ := p.database.Query(sqlStatement, id)
+	projectStub := model.NewProjectStub()
 	for rows.Next() {
-		var theme model.Theme
-		if err = rows.Scan(
-			&theme.Name,
-			&theme.Logo,
-			&theme.Description,
+		if err := rows.Scan(
+			&projectStub.ID,
+			&projectStub.Title,
+			&projectStub.State,
+			&projectStub.Logo,
+			&projectStub.StartDate,
+			&projectStub.EndDate,
+			&projectStub.OneLiner,
+			&projectStub.MemberCount,
+			&projectStub.InterestedCount,
 		); err != nil {
 			return nil, err
 		}
-		projectStub.Themes = append(projectStub.Themes, theme)
-	}
 
-	// Member Count
-	sqlStatement = `SELECT COUNT(*) from contributing where project_id = $1`
-	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan(
-		&projectStub.MemberCount,
-	)
-	if err != nil {
-		return nil, err
-	}
-	// Interested Count
-	sqlStatement = `SELECT COUNT(*) from interested where project_id = $1`
-	row = p.database.QueryRow(sqlStatement, id)
-	err = row.Scan(
-		&projectStub.InterestedCount,
-	)
-	if err != nil {
-		return nil, err
+		// Fill in the themes array
+		sqlStatement = `SELECT themes.name, themes.logo, themes.description
+							FROM themes,project_has_theme
+							WHERE themes.name = project_has_theme.theme_name AND project_has_theme.project_id = $1;`
+		rows, _ = p.database.Query(sqlStatement, id)
+		for rows.Next() {
+			var theme model.Theme
+			if err = rows.Scan(
+				&theme.Name,
+				&theme.Logo,
+				&theme.Description,
+			); err != nil {
+				return nil, err
+			}
+			projectStub.Themes = append(projectStub.Themes, theme)
+		}
 	}
 
 	return &projectStub, nil
-
 }
+
 func (p PostgresDBStore) GetProject(id string) (*model.Project, error) {
 	project := model.NewProject()
 

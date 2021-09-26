@@ -63,6 +63,7 @@ type projectProvider interface {
 	// Public APIs
 
 	GetProject(id string) (*model.Project, error)
+	GetProjects() ([]model.ProjectStub, error)
 	GetProjectStub(id string) (*model.ProjectStub, error)
 
 	GetProjMembers(id string) ([]model.User, error)
